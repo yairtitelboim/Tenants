@@ -123,6 +123,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@kurkle/color@^0.3.0":
+  version "0.3.4"
+  resolved "https://registry.npmjs.org/@kurkle/color/-/color-0.3.4.tgz"
+  integrity sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==
+
 "@next/env@15.0.3":
   version "15.0.3"
   resolved "https://registry.npmjs.org/@next/env/-/env-15.0.3.tgz"
@@ -230,12 +235,19 @@
     "@types/react" "*"
     hoist-non-react-statics "^3.3.0"
 
-"@types/node@latest":
+"@types/node@*", "@types/node@latest":
   version "22.10.1"
   resolved "https://registry.npmjs.org/@types/node/-/node-22.10.1.tgz"
   integrity sha512-qKgsUwfHZV2WCWLAnVP1JqnpE6Im6h3Y0+fYgMTasNQ7V++CBX5OT1as0g0f+OyubbFqhf6XVNIsmN4IIhEgGQ==
   dependencies:
     undici-types "~6.20.0"
+
+"@types/papaparse@^5.3.15":
+  version "5.3.15"
+  resolved "https://registry.npmjs.org/@types/papaparse/-/papaparse-5.3.15.tgz"
+  integrity sha512-JHe6vF6x/8Z85nCX4yFdDslN11d+1pr12E526X8WAfhadOeaOTx5AuIkvDKIBopfvlzpzkdMx4YyvSKCM9oqtw==
+  dependencies:
+    "@types/node" "*"
 
 "@types/prop-types@*":
   version "15.7.13"
@@ -385,6 +397,13 @@ caniuse-lite@^1.0.30001579, caniuse-lite@^1.0.30001646, caniuse-lite@^1.0.300016
   version "1.0.30001680"
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001680.tgz"
   integrity sha512-rPQy70G6AGUMnbwS1z6Xg+RkHYPAi18ihs47GH0jcxIG7wArmPgY3XbS2sRdBbxJljp3thdT8BIqv9ccCypiPA==
+
+chart.js@^4.1.1, chart.js@^4.4.7:
+  version "4.4.7"
+  resolved "https://registry.npmjs.org/chart.js/-/chart.js-4.4.7.tgz"
+  integrity sha512-pwkcKfdzTMAU/+jNosKhNL2bHtJc/sSmYgVbuGTEDhzkrhmyihmP7vUc/5ZK9WopidMDHNe3Wm7jOd/WhuHWuw==
+  dependencies:
+    "@kurkle/color" "^0.3.0"
 
 chokidar@^3.6.0:
   version "3.6.0"
@@ -922,6 +941,11 @@ package-json-from-dist@^1.0.0:
   resolved "https://registry.npmjs.org/package-json-from-dist/-/package-json-from-dist-1.0.1.tgz"
   integrity sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==
 
+papaparse@^5.4.1:
+  version "5.4.1"
+  resolved "https://registry.npmjs.org/papaparse/-/papaparse-5.4.1.tgz"
+  integrity sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==
+
 path-key@^3.1.0:
   version "3.1.1"
   resolved "https://registry.npmjs.org/path-key/-/path-key-3.1.1.tgz"
@@ -1045,6 +1069,11 @@ queue-microtask@^1.2.2:
   resolved "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
 
+react-chartjs-2@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.npmjs.org/react-chartjs-2/-/react-chartjs-2-5.2.0.tgz"
+  integrity sha512-98iN5aguJyVSxp5U3CblRLH67J8gkfyGNbiK3c+l1QI/G4irHMPQw44aEPmjVag+YKTyQ260NcF82GTQ3bdscA==
+
 react-datepicker@*, react-datepicker@^7.5.0:
   version "7.5.0"
   resolved "https://registry.npmjs.org/react-datepicker/-/react-datepicker-7.5.0.tgz"
@@ -1125,10 +1154,10 @@ recharts-scale@^0.4.4:
   dependencies:
     decimal.js-light "^2.4.1"
 
-recharts@^2.13.3:
-  version "2.13.3"
-  resolved "https://registry.npmjs.org/recharts/-/recharts-2.13.3.tgz"
-  integrity sha512-YDZ9dOfK9t3ycwxgKbrnDlRC4BHdjlY73fet3a0C1+qGMjXVZe6+VXmpOIIhzkje5MMEL8AN4hLIe4AMskBzlA==
+recharts@^2.14.1:
+  version "2.14.1"
+  resolved "https://registry.npmjs.org/recharts/-/recharts-2.14.1.tgz"
+  integrity sha512-xtWulflkA+/xu4/QClBdtZYN30dbvTHjxjkh5XTMrH/CQ3WGDDPHHa/LLKCbgoqz0z3UaSH2/blV1i6VNMeh1g==
   dependencies:
     clsx "^2.0.0"
     eventemitter3 "^4.0.1"

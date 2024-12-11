@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Calendar, Filter, Activity, Users, BarChart2, Building2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Filter, Activity, Users, BarChart2, Building2, Square, FileText } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, BarChart, Bar } from 'recharts';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -198,7 +198,7 @@ const getDateRange = (data: RawDataEntry[]) => {
 
 interface MetricCardProps {
   title: string;
-  value: number;
+  value: string | number;
   trend?: number;
   icon?: React.ReactNode;
 }
@@ -211,7 +211,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon }) =>
     </div>
     <div className="mt-2 flex items-baseline">
       <p className="text-2xl font-semibold text-white">
-        {value.toLocaleString()}
+        {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
       {trend !== undefined && (
         <span className={`ml-2 text-sm ${trend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -221,6 +221,14 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon }) =>
     </div>
   </div>
 );
+
+// Add this CSS to your global styles or component
+const chartStyle = {
+  backgroundColor: '#1F2937',
+  '.recharts-surface, .recharts-default-tooltip': {
+    backgroundColor: '#1F2937 !important',
+  }
+};
 
 const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
   // Enhanced state management
@@ -342,8 +350,8 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
               d.hour_of_day === hour
             );
             
-            const totalEvents = tenantEvents.reduce((sum, d) => sum + d.total_events, 0);
-            data[tenant] = totalEvents;
+            // Initialize with 0 and ensure we're adding numbers
+            data[tenant] = tenantEvents.reduce((sum, d) => sum + (d.total_events || 0), 0);
           }
         });
         
@@ -527,43 +535,40 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
     const startDate = filters.dateRange[0];
     const endDate = filters.dateRange[1];
     
-    // Get list of tenants (excluding "All Tenants")
     const tenantList = tenants.filter(t => t !== "All Tenants");
     
-    // Filter and aggregate data by weekday and tenant
+    interface DayData {
+      day: string;
+      [key: string]: string | number;
+    }
+    
     const weekdayData = rawData.filter(d => {
       const date = new Date(d.event_date);
       return date >= startDate && date <= endDate;
     }).reduce((acc, curr) => {
       const date = new Date(curr.event_date);
-      const weekday = date.getDay(); // 0 = Sunday, 6 = Saturday
+      const weekday = date.getDay();
       
-      // Skip weekends
       if (weekday === 0 || weekday === 6) return acc;
       
-      // Adjust to Mon-Fri (0-4)
       const adjustedDay = weekday - 1;
       const normalizedTenant = normalizeTenantName(curr.tenant);
       
       if (!acc[adjustedDay]) {
         acc[adjustedDay] = {
           day: WEEKDAYS[adjustedDay],
-          // Initialize each tenant's count
           ...Object.fromEntries(tenantList.map(tenant => [tenant, 0]))
         };
       }
       
       if (tenantList.includes(normalizedTenant)) {
-        acc[adjustedDay][normalizedTenant] += curr.total_events;
+        const currentValue = acc[adjustedDay][normalizedTenant];
+        acc[adjustedDay][normalizedTenant] = (typeof currentValue === 'number' ? currentValue : 0) + curr.total_events;
       }
       
       return acc;
-    }, {} as Record<number, { 
-      day: string; 
-      [key: string]: string | number; 
-    }>);
+    }, {} as Record<number, DayData>);
 
-    // Convert to array and ensure all weekdays are represented
     return WEEKDAYS.map((day, index) => ({
       day,
       ...Object.fromEntries(tenantList.map(tenant => [
@@ -573,9 +578,261 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
     }));
   }, [tenants, rawData, filters.dateRange]);
 
+  // Add this near the top with other interfaces
+  interface RawDataItem {
+    PropertyName: string;
+    reader_category: string;
+    total_events: number;
+  }
+
+  // Add this near other data processing functions
+  const formatReaderData = (rawData: RawDataItem[]) => {
+    const categories = Array.from(new Set(rawData.map(d => d.reader_category))).sort((a, b) => {
+      const totalA = rawData.filter(d => d.reader_category === a).reduce((sum, d) => sum + d.total_events, 0);
+      const totalB = rawData.filter(d => d.reader_category === b).reduce((sum, d) => sum + d.total_events, 0);
+      return totalB - totalA;
+    });
+    
+    return categories.map(category => ({
+      category: category.replace(/_/g, ' '),
+      "CIBC Square": rawData.find(d => d.PropertyName.includes('CIBC') && d.reader_category === category)?.total_events || 0,
+      "Wolf Point": rawData.find(d => d.PropertyName.includes('Wolf') && d.reader_category === category)?.total_events || 0
+    }));
+  };
+
+  // Inside the TenantDashboard component, add this with other useMemo hooks
+  const readerCategoryData = useMemo(() => formatReaderData([
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Primary_Entry","total_events":305960},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Secondary_Entry","total_events":220823},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Vertical_Transport","total_events":128865},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Floor_Access","total_events":75878},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Other","total_events":74239},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Common_Areas","total_events":33918},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Amenities","total_events":32947},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Tenant_Space","total_events":16798},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Parking_Transport","total_events":15160},
+    {"PropertyName":"CIBC Square - 81 Bay - Owned (CONFIDENTIAL) Office","reader_category":"Building_Operations","total_events":3637},
+    {"PropertyName":"CIBC Square - 81 Bay t- Owned (CONFIDENTIAL) Office","reader_category":"Security_BOH","total_events":1618},
+    {"PropertyName":"Wolf Point South","reader_category":"Secondary_Entry","total_events":527399},
+    {"PropertyName":"Wolf Point South","reader_category":"Floor_Access","total_events":119858},
+    {"PropertyName":"Wolf Point South","reader_category":"Vertical_Transport","total_events":89793},
+    {"PropertyName":"Wolf Point South","reader_category":"Other","total_events":84548},
+    {"PropertyName":"Wolf Point South","reader_category":"Parking_Transport","total_events":57510},
+    {"PropertyName":"Wolf Point South","reader_category":"Security_BOH","total_events":44595},
+    {"PropertyName":"Wolf Point South","reader_category":"Common_Areas","total_events":27700},
+    {"PropertyName":"Wolf Point South","reader_category":"Building_Operations","total_events":16383},
+    {"PropertyName":"Wolf Point South","reader_category":"Amenities","total_events":14005},
+    {"PropertyName":"Wolf Point South","reader_category":"Tenant_Space","total_events":281}
+  ]), []);
+
+  // Add this interface near the top with other interfaces
+  interface LeaseInfo {
+    buildingName: string;
+    buildingCount?: number;
+    leaseArea: number;
+    leaseEndDate: string;
+    leaseType: string;
+    latestEndDate?: string;
+    totalLeaseArea?: number;
+  }
+
+  // Update the lease data with the correct information
+  const LEASE_DATA: { [key: string]: LeaseInfo } = {
+    "Lerer Hippeau Management, LLC": {
+      buildingName: "555 Greenwich",
+      leaseArea: 12084,
+      leaseEndDate: "2033-09-30",
+      leaseType: "Office"
+    },
+    "Audacy New York, LLC.": {
+      buildingName: "345 Hudson Street",
+      leaseArea: 109047,
+      leaseEndDate: "2027-08-31",
+      leaseType: "Office"
+    },
+    "Google, LLC": {
+      buildingName: "345 Hudson Street",
+      leaseArea: 348645,
+      leaseEndDate: "2029-04-30",
+      leaseType: "Office"
+    },
+    "Salesforce.com, Inc": {
+      buildingName: "Wolf Point South Owner LLC",
+      leaseArea: 429263,
+      leaseEndDate: "2040-05-31",
+      leaseType: "Office"
+    },
+    "Kirkland & Ellis LLP": {
+      buildingName: "Wolf Point South Owner LLC",
+      leaseArea: 677821,
+      leaseEndDate: "2043-02-28",
+      leaseType: "Office"
+    }
+  };
+
+  // Ensure the selectedTenant matches the keys in LEASE_DATA
+  const selectedTenantInfo = useMemo(() => {
+    if (selectedTenant === "All Tenants") {
+      return {
+        buildingCount: new Set(Object.values(LEASE_DATA).map(d => d.buildingName)).size,
+        totalLeaseArea: Object.values(LEASE_DATA).reduce((sum, d) => sum + d.leaseArea, 0),
+        latestEndDate: Object.values(LEASE_DATA)
+          .map(d => new Date(d.leaseEndDate))
+          .reduce((latest, date) => date > latest ? date : latest, new Date(0))
+          .toISOString().split('T')[0],
+        leaseType: "Mixed"
+      } as LeaseInfo;
+    }
+
+    // Find the matching tenant data using normalized names
+    const tenantData = Object.entries(LEASE_DATA).find(([key]) => 
+      normalizeTenantName(key) === normalizeTenantName(selectedTenant)
+    );
+
+    return tenantData ? tenantData[1] : {
+      buildingName: "N/A",
+      leaseArea: 0,
+      leaseEndDate: "N/A",
+      leaseType: "N/A"
+    } as LeaseInfo;
+  }, [selectedTenant]);
+
+  // Add these new interfaces
+  interface DayActivity {
+    date: string;
+    value: number;
+  }
+
+  interface MonthData {
+    month: string;
+    days: DayActivity[];
+  }
+
+  // Replace the previous heatMapData with this new calendar data preparation
+  const calendarData = useMemo(() => {
+    const dailyTotals: Record<string, number> = {};
+
+    // Aggregate events by date for the selected tenant
+    rawData.forEach((entry) => {
+      const normalizedTenant = normalizeTenantName(entry.tenant);
+      if (selectedTenant === "All Tenants" || normalizedTenant === selectedTenant) {
+        if (!dailyTotals[entry.event_date]) {
+          dailyTotals[entry.event_date] = 0;
+        }
+        dailyTotals[entry.event_date] += entry.total_events;
+      }
+    });
+
+    const maxValue = Math.max(...Object.values(dailyTotals));
+
+    const getColor = (value: number) => {
+      const intensity = value / maxValue;
+      // Get tenant color or default to a blue shade for "All Tenants"
+      const baseColor = TENANT_COLORS[selectedTenant as keyof typeof TENANT_COLORS] || '#08589e';
+      
+      // Convert hex to RGB
+      const hex = baseColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+
+      // Calculate darker version of the tenant color for low activity
+      const darkR = Math.floor(r * 0.2); // 20% of the original color
+      const darkG = Math.floor(g * 0.2);
+      const darkB = Math.floor(b * 0.2);
+
+      // Interpolate between dark and bright versions based on intensity
+      const finalR = Math.floor(darkR + (intensity * (r - darkR)));
+      const finalG = Math.floor(darkG + (intensity * (g - darkG)));
+      const finalB = Math.floor(darkB + (intensity * (b - darkB)));
+
+      return `rgb(${finalR}, ${finalG}, ${finalB})`;
+    };
+
+    return (
+      <div className="grid grid-cols-3 gap-4">
+        {Array.from({ length: 12 }, (_, monthIndex) => {
+          const date = new Date(2024, monthIndex, 1);
+          const monthName = date.toLocaleString('default', { month: 'long' });
+          
+          // Check if month has any activity
+          const monthHasActivity = Object.keys(dailyTotals).some(dateStr => 
+            dateStr.startsWith(`2024-${String(monthIndex + 1).padStart(2, '0')}`)
+          );
+
+          if (!monthHasActivity) {
+            return (
+              <div key={monthName} className="bg-gray-800 p-4 rounded-lg flex flex-col items-center justify-center min-h-[200px]">
+                <h3 className="text-lg font-semibold mb-2 text-gray-300">
+                  {monthName}
+                </h3>
+                <p className="text-sm text-gray-500 text-center">
+                  NO ACTIVITY RECORDED
+                </p>
+              </div>
+            );
+          }
+
+          const daysInMonth = new Date(2024, monthIndex + 1, 0).getDate();
+          const firstDayOfMonth = new Date(2024, monthIndex, 1).getDay();
+
+          return (
+            <div key={monthName} className="bg-gray-800 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold mb-2 text-center text-gray-300">
+                {monthName}
+              </h3>
+              <div className="grid grid-cols-7 gap-1">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                  <div key={day} className="text-xs text-gray-500 text-center">
+                    {day}
+                  </div>
+                ))}
+                
+                {Array.from({ length: firstDayOfMonth }, (_, i) => (
+                  <div key={`empty-${i}`} className="aspect-square" />
+                ))}
+                
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const dateStr = `2024-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const value = dailyTotals[dateStr] || 0;
+                  
+                  return (
+                    <div
+                      key={dateStr}
+                      className="aspect-square relative group"
+                      style={{
+                        backgroundColor: value ? getColor(value) : 'rgb(31, 41, 55)', // Very dark gray for no activity
+                        transition: 'all 150ms ease'
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs text-gray-300">
+                          {day}
+                        </span>
+                      </div>
+                      
+                      {value > 0 && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                          <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                            {value.toLocaleString()} events
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }, [rawData, selectedTenant]);
+
   return (
     <div className="p-6 bg-gray-900 text-white min-h-screen w-full">
-      {/* Enhanced Header with Controls */}
+      {/* Header and Controls */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
           <button
@@ -666,8 +923,8 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
         </div>
       </div>
 
-      {/* Enhanced Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Metric Cards */}
+      <div className="grid grid-cols-4 gap-6 mb-8">
         <MetricCard
           title="Total Events"
           value={totalEventsMetric}
@@ -675,9 +932,9 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
           icon={<Activity className="h-5 w-5" />}
         />
         <MetricCard
-          title="Average Daily Traffic"
-          value={1234}
-          trend={-2.1}
+          title="Unique Credentials"
+          value={wolfPointMetrics.uniqueCredentials}
+          trend={-1.3}
           icon={<Users className="h-5 w-5" />}
         />
         <MetricCard
@@ -687,23 +944,98 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
           icon={<BarChart2 className="h-5 w-5" />}
         />
         <MetricCard
-          title={selectedTenant === "All Tenants" 
-            ? "Wolf Point South Events" 
-            : `${selectedTenant} Building Events`}
-          value={wolfPointMetrics.totalEvents}
-          trend={3.4}
+          title="Another Metric"
+          value={1234}
+          trend={2.5}
           icon={<Building2 className="h-5 w-5" />}
         />
       </div>
 
-      {/* Updated Movement Pattern Chart with taller height */}
+      {/* Weekly Movement Patterns */}
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl mb-8">
+        <h2 className="text-xl font-bold mb-6">Weekly Movement Patterns</h2>
+        <div className="h-[400px] bg-gray-900">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={weeklyMovementData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 35 }}
+              style={chartStyle}
+            >
+              <defs>
+                <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1F2937" />
+                  <stop offset="100%" stopColor="#1F2937" />
+                </linearGradient>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#chartBackground)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+              <XAxis 
+                dataKey="day" 
+                stroke="#9CA3AF"
+                tick={{ fill: '#9CA3AF' }}
+                label={{ 
+                  value: 'Day of Week', 
+                  position: 'bottom', 
+                  offset: 20,
+                  fill: '#9CA3AF'
+                }}
+              />
+              <YAxis
+                stroke="#9CA3AF"
+                tick={{ fill: '#9CA3AF' }}
+                label={{ 
+                  value: 'Movement Events', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  fill: '#9CA3AF',
+                  dx: -10
+                }}
+              />
+              <Tooltip
+                cursor={{ fill: '#1F2937' }} // Dark background for hover area
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  borderColor: '#374151',
+                  borderRadius: '0.375rem',
+                  color: '#fff',
+                  opacity: 0.95
+                }}
+                formatter={(value: number, name: string) => [
+                  `${value} events`,
+                  normalizeTenantName(name)
+                ]}
+              />
+              <Legend 
+                verticalAlign="top" 
+                height={36}
+                formatter={(value) => normalizeTenantName(value)}
+              />
+              {tenants
+                .filter(t => t !== "All Tenants")
+                .map((tenant, index) => (
+                  <Bar 
+                    key={tenant}
+                    dataKey={tenant}
+                    name={tenant}
+                    fill={TENANT_COLORS[tenant as keyof typeof TENANT_COLORS]}
+                    radius={[4, 4, 0, 0]}
+                    barSize={30}
+                    hide={selectedTenant !== "All Tenants" && selectedTenant !== tenant}
+                  />
+                ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Hourly Movement Patterns - Moved here */}
       <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl mb-8">
         <h2 className="text-xl font-bold mb-6">Hourly Movement Patterns</h2>
         <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 35 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
               <XAxis 
@@ -713,9 +1045,8 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
                 label={{ 
                   value: 'Hour of Day', 
                   position: 'bottom', 
-                  offset: 0,
-                  fill: '#9CA3AF',
-                  dy: 10
+                  offset: 20,
+                  fill: '#9CA3AF'
                 }}
                 padding={{ left: 30, right: 30 }}
                 tickFormatter={(value) => value}
@@ -754,7 +1085,12 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
                   borderRadius: '0.375rem'
                 }}
                 labelFormatter={(label) => `Time: ${label}`}
-                formatter={(value: number) => [`${value} events`, 'Events']}
+                formatter={(value: any) => {
+                  if (typeof value === 'number') {
+                    return [new Intl.NumberFormat().format(value), 'Events'];
+                  }
+                  return [value, 'Events'];
+                }}
               />
               <Legend 
                 verticalAlign="top"
@@ -810,11 +1146,129 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
         </div>
       </div>
 
-      {/* Bottom Grid with Enhanced Styling */}
+      {/* Monthly Activity Heat Map */}
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl mb-8">
+        <h2 className="text-xl font-bold mb-6">Month-over-Month Activity Heat Map</h2>
+        {calendarData}
+      </div>
+
+      {/* First row - Lease Information Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <MetricCard
+          title="Building"
+          value={selectedTenant === "All Tenants" ? 
+            `${selectedTenantInfo.buildingCount} Buildings` : 
+            selectedTenantInfo.buildingName}
+          icon={<Building2 className="h-5 w-5" />}
+        />
+        <MetricCard
+          title="Lease Area (sq ft)"
+          value={selectedTenantInfo.leaseArea}
+          icon={<Square className="h-5 w-5" />}
+        />
+        <MetricCard
+          title="Lease End Date"
+          value={selectedTenant === "All Tenants" ? 
+            `Latest: ${selectedTenantInfo.latestEndDate}` : 
+            selectedTenantInfo.leaseEndDate}
+          icon={<Calendar className="h-5 w-5" />}
+        />
+        <MetricCard
+          title="Lease Type"
+          value={selectedTenantInfo.leaseType}
+          icon={<FileText className="h-5 w-5" />}
+        />
+      </div>
+
+      {/* Second row - Movement Metrics Cards (moved here) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <MetricCard
+          title="Total Events"
+          value={totalEventsMetric}
+          trend={5.2}
+          icon={<Activity className="h-5 w-5" />}
+        />
+        <MetricCard
+          title="Average Daily Traffic"
+          value={1234}
+          trend={-2.1}
+          icon={<Users className="h-5 w-5" />}
+        />
+        <MetricCard
+          title="Peak Hour Activity"
+          value={567}
+          trend={8.7}
+          icon={<BarChart2 className="h-5 w-5" />}
+        />
+        <MetricCard
+          title={selectedTenant === "All Tenants" 
+            ? "Wolf Point South Events" 
+            : `${selectedTenant} Building Events`}
+          value={wolfPointMetrics.totalEvents}
+          trend={3.4}
+          icon={<Building2 className="h-5 w-5" />}
+        />
+      </div>
+
+      {/* Bottom Grid */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl">
           <h2 className="text-xl font-bold mb-6">Movement Types</h2>
-          {/* ... movement types content ... */}
+          <div className="h-[400px] bg-gray-900">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={movementTypeData}
+                layout="vertical"
+                margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
+                style={chartStyle}
+              >
+                <defs>
+                  <linearGradient id="chartBackground2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1F2937" />
+                    <stop offset="100%" stopColor="#1F2937" />
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#chartBackground2)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+                <XAxis 
+                  type="number" 
+                  tick={{ fill: '#fff', fontSize: 12 }}
+                  label={{ 
+                    value: "Number of Events", 
+                    position: "bottom", 
+                    fill: "#fff",
+                    fontSize: 14,
+                    offset: 0
+                  }}
+                  tickFormatter={value => new Intl.NumberFormat().format(value)}
+                />
+                <YAxis 
+                  type="category" 
+                  dataKey="category" 
+                  tick={{ fill: '#fff', fontSize: 12 }}
+                  width={140}
+                />
+                <Tooltip
+                  cursor={{ fill: '#1F2937' }}
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    borderColor: '#374151',
+                    borderRadius: '0.375rem',
+                    color: '#fff',
+                    opacity: 0.95
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{
+                    fontSize: '14px',
+                    paddingTop: '20px'
+                  }}
+                />
+                <Bar dataKey="CIBC Square" fill="#60a5fa" />
+                <Bar dataKey="Wolf Point" fill="#f97316" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl">
           <h2 className="text-xl font-bold mb-6">Key Insights</h2>
@@ -822,68 +1276,57 @@ const TenantDashboard = ({ onBack }: { onBack: () => void }) => {
         </div>
       </div>
 
-      {/* Update the weekly movement chart JSX */}
+      {/* Reader Category Distribution Chart */}
       <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl mb-8 mt-8">
-        <h2 className="text-xl font-bold mb-6">Weekly Movement Patterns</h2>
-        <div className="h-[400px]">
+        <h2 className="text-xl font-bold mb-6">Access Control Events by Category</h2>
+        <div className="h-[600px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={weeklyMovementData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            <BarChart 
+              data={readerCategoryData} 
+              layout="vertical" 
+              margin={{ top: 20, right: 30, left: 150, bottom: 40 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis 
-                dataKey="day" 
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
+                type="number" 
+                tick={{ fill: '#fff', fontSize: 12 }}
                 label={{ 
-                  value: 'Day of Week', 
-                  position: 'bottom', 
-                  offset: 0,
-                  fill: '#9CA3AF',
-                  dy: 10
+                  value: "Number of Events", 
+                  position: "bottom", 
+                  fill: "#fff",
+                  fontSize: 14,
+                  offset: 0
                 }}
+                tickFormatter={value => new Intl.NumberFormat().format(value)}
               />
-              <YAxis
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
-                label={{ 
-                  value: 'Movement Events', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  fill: '#9CA3AF',
-                  dx: -10
-                }}
+              <YAxis 
+                type="category" 
+                dataKey="category" 
+                tick={{ fill: '#fff', fontSize: 12 }}
+                width={140}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1f2937', 
                   borderColor: '#374151',
-                  borderRadius: '0.375rem'
+                  color: '#fff',
+                  fontSize: 12
                 }}
-                formatter={(value: number, name: string) => [
-                  `${value} events`,
-                  normalizeTenantName(name)
-                ]}
+                formatter={(value: any) => {
+                  if (typeof value === 'number') {
+                    return [new Intl.NumberFormat().format(value), ''];
+                  }
+                  return [value, ''];
+                }}
               />
               <Legend 
-                verticalAlign="top" 
-                height={36}
-                formatter={(value) => normalizeTenantName(value)}
+                wrapperStyle={{
+                  fontSize: '14px',
+                  paddingTop: '20px'
+                }}
               />
-              {tenants
-                .filter(t => t !== "All Tenants")
-                .map((tenant, index) => (
-                  <Bar 
-                    key={tenant}
-                    dataKey={tenant}
-                    name={tenant}
-                    fill={TENANT_COLORS[tenant as keyof typeof TENANT_COLORS]}
-                    radius={[4, 4, 0, 0]}
-                    barSize={30}
-                    hide={selectedTenant !== "All Tenants" && selectedTenant !== tenant}
-                  />
-                ))}
+              <Bar dataKey="CIBC Square" fill="#60a5fa" />
+              <Bar dataKey="Wolf Point" fill="#f97316" />
             </BarChart>
           </ResponsiveContainer>
         </div>
