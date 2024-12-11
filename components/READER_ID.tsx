@@ -85,7 +85,10 @@ const CategoryDistribution = ({ onBack }: { onBack: () => void }) => {
                 color: '#fff',
                 fontSize: 12
               }}
-              formatter={(value) => new Intl.NumberFormat().format(value)}
+              formatter={(value) => {
+                const num = Number(value);
+                return !isNaN(num) ? new Intl.NumberFormat().format(num) : value.toString();
+              }}
             />
             <Legend 
               wrapperStyle={{

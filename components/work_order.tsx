@@ -3,6 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { AlertCircle, Calendar, Building2, ClipboardList, ArrowLeft } from 'lucide-react';
 
+interface TooltipPayload {
+  name: string;
+  value: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
+
 const buildingData = [
   { name: "CIBC SQUARE", orders: 12357, daily: 124.8, days: 99 },
   { name: "River Point", orders: 4341, daily: 22.4, days: 194 },
@@ -24,7 +35,19 @@ const coverageData = [
   { name: "Cost", percent: 14, category: "Financial" }
 ];
 
-const StatCard = ({ icon: Icon, title, value, subtitle, className }) => (
+const StatCard = ({ 
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+  className 
+}: {
+  icon: React.ElementType;
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  className?: string;
+}) => (
   <Card className="bg-gray-800 border-gray-700">
     <CardContent className="pt-6">
       <div className="flex items-start">
@@ -41,7 +64,7 @@ const StatCard = ({ icon: Icon, title, value, subtitle, className }) => (
   </Card>
 );
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-800 p-3 border border-gray-700 rounded-lg shadow">
@@ -57,7 +80,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function WorkOrderDashboard({ onBack }) {
+interface WorkOrderDashboardProps {
+  onBack: () => void;  // Function that takes no parameters and returns nothing
+}
+
+export default function WorkOrderDashboard({ onBack }: WorkOrderDashboardProps) {
   return (
     <div className="p-6 space-y-6 bg-gray-900 text-white min-h-screen">
       <div className="flex items-center justify-between mb-6">
