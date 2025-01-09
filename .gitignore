@@ -49,8 +49,11 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
-# Keep this specific CSV file
+# First unignore the directories
+!public/
 !public/data/
+
+# Then unignore the specific file
 !public/data/Hines_monthly_2024-12-18.csv
 
 # TypeScript
