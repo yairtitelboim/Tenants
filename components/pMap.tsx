@@ -4,6 +4,7 @@ import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Popup from './popup';
 import Admin from './admin';
+import Papa from 'papaparse';
 
 // Set the access token
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
@@ -197,6 +198,7 @@ export default function PMap() {
   const [highlightedBuilding, setHighlightedBuilding] = useState<string | undefined>();
   const [showAdmin, setShowAdmin] = useState(true);
   const [buildingRankings, setBuildingRankings] = useState<Map<string, number>>(new Map());
+  const [csvData, setCsvData] = useState<BuildingEntry[]>([]);
 
   useEffect(() => {
     // Create timestamp once at the start of data loading
@@ -768,6 +770,36 @@ export default function PMap() {
     setSelectedBuilding(null);
     setHighlightedBuilding(name);
     setShowAdmin(true);
+  };
+
+  const processData = (text: string) => {
+    Papa.parse(text, {
+      header: true,
+      complete: (results) => {
+        const parsedData = results.data
+          .filter((entry: any): entry is BuildingEntry => entry !== null);
+
+        if (parsedData.length > 0) {
+          setCsvData(parsedData); // Store the parsed data
+          
+          const buildingsMap: Record<string, BuildingEntry> = {};
+          // ... rest of your processing code ...
+        }
+      }
+    });
+  };
+
+  const findBuildingData = (buildingName: string) => {
+    // console.log('Looking for building in CSV:', buildingName);
+    
+    const matches = csvData.filter(row => row.name === buildingName);
+    
+    if (matches.length > 0) {
+      return matches.sort((a, b) => 
+        new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+      )[0];
+    }
+    return null;
   };
 
   return (
