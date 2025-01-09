@@ -570,7 +570,11 @@ export default function PMap() {
 
     // If we found any buildings, highlight them
     if (features && features.length > 0) {
-      const buildingFeatures = features.filter(f => f.layer.id === '3d-buildings');
+      const buildingFeatures = features.filter(f => 
+        f.layer && 
+        'id' in f.layer && 
+        f.layer.id === '3d-buildings'
+      );
       
       if (buildingFeatures.length > 0) {
         // Create a Set of unique building IDs
