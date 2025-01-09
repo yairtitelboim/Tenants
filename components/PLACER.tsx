@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Building2, Users, Clock, MapPin, BarChart3, Database, ArrowLeft } from 'lucide-react';
+import { Building2, Users, Clock, MapPin, BarChart3, Database, ArrowLeft, Calendar } from 'lucide-react';
 import Papa from 'papaparse';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BuildingHeatMap from '@/components/BuildingHeatMap';
@@ -67,14 +67,18 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, change }) => (
-  <div className="bg-gray-800 p-6 rounded-xl">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-gray-400 text-sm">{title}</p>
-        <p className="text-2xl font-bold mt-1">{value}</p>
-        {change && <p className="text-sm text-green-400 mt-1">{change}</p>}
+  <div className="bg-gray-800 p-4 rounded-xl h-full">
+    <div className="flex flex-col h-full">
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="text-gray-400 text-sm">{title}</p>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+        </div>
+        <div className="text-blue-500">{icon}</div>
       </div>
-      <div className="text-blue-500">{icon}</div>
+      {change && (
+        <p className="text-sm text-green-400 mt-auto pt-2">{change}</p>
+      )}
     </div>
   </div>
 );
@@ -435,22 +439,24 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gray-900 text-white px-3 py-4 sm:p-8">
       {/* Dashboard Header */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-            Hines Placer POC - Foottraffic Analysis
+      <div className="mb-8 sm:mb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+          <h1 className="text-xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 leading-tight">
+            Hines Placer POC - 
+            <br className="sm:hidden" />
+            Foottraffic Analysis
           </h1>
           <button
             onClick={onBack}
-            className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
         </div>
-        <div className="text-gray-400 mb-6 flex items-center gap-4">
+        <div className="text-gray-400 mb-4 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
           <span>v0.1</span>
           <span>•</span>
           <span>{new Date().toLocaleDateString('en-US', { 
@@ -459,53 +465,53 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
             year: 'numeric'
           })}</span>
         </div>
+      </div>
 
-        {/* Section Navigation */}
-        <div className="text-gray-400 mb-6">
-          <h2 className="text-xl font-semibold text-gray-200 mb-3">This Analysis Includes:</h2>
-          <p className="mb-6">
-            A comprehensive overview of building traffic patterns, visitor behavior, and geographic distribution analysis. 
-            The dashboard is divided into four main sections to help analyze and visualize the Placer.ai data effectively.
+      {/* Section Navigation */}
+      <div className="text-gray-400 mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-200 mb-2">This Analysis Includes:</h2>
+        <p className="text-sm sm:text-base">
+          A comprehensive overview of building traffic patterns, visitor behavior, and geographic distribution analysis. 
+          The dashboard is divided into four main sections to help analyze and visualize the Placer.ai data effectively.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <h3 className="font-semibold text-sm sm:text-base">Data Overview</h3>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-400">
+            Comprehensive statistics and data field analysis
           </p>
         </div>
-
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <Database className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold">Data Overview</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              Comprehensive statistics and data field analysis
-            </p>
+        <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 className="w-5 h-5 text-emerald-400" />
+            <h3 className="font-semibold">Traffic Analysis</h3>
           </div>
-          <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-semibold">Traffic Analysis</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              Hourly and weekly visitor patterns
-            </p>
+          <p className="text-sm text-gray-400">
+            Hourly and weekly visitor patterns
+          </p>
+        </div>
+        <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="w-5 h-5 text-rose-400" />
+            <h3 className="font-semibold">Geographic View</h3>
           </div>
-          <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <MapPin className="w-5 h-5 text-rose-400" />
-              <h3 className="font-semibold">Geographic View</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              Building locations and heat map visualization
-            </p>
+          <p className="text-sm text-gray-400">
+            Building locations and heat map visualization
+          </p>
+        </div>
+        <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="w-5 h-5 text-purple-400" />
+            <h3 className="font-semibold">Building Details</h3>
           </div>
-          <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <Building2 className="w-5 h-5 text-purple-400" />
-              <h3 className="font-semibold">Building Details</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              Individual building metrics and comparisons
-            </p>
-          </div>
+          <p className="text-sm text-gray-400">
+            Individual building metrics and comparisons
+          </p>
         </div>
       </div>
 
@@ -519,7 +525,9 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
         </div>
         
         {/* Stats Component */}
-        <Stats data={filteredData} />
+        <div className="px-2 sm:px-0">
+          <Stats data={filteredData} />
+        </div>
 
         {/* Date Range Filter with Reset */}
         <div className="mt-8 bg-gray-800/40 p-4 rounded-lg border border-gray-700">
@@ -596,7 +604,7 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard
           title="Total Properties"
           value={metrics?.propertyCount || 0}
@@ -650,7 +658,7 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
       </div>
 
       {/* Table and Heat Map Grid */}
-      <div className="grid grid-cols-10 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         {/* Buildings Table - 3 columns (30%) */}
         <div className="col-span-3 bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl h-full">
           <h2 className="text-xl font-bold mb-6">Building Details</h2>
@@ -728,13 +736,15 @@ const PLACER: React.FC<PlacerProps> = ({ onBack }) => {
         {/* Building Activity Heat Map - 7 columns (70%) */}
         <div className="col-span-7 bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl">
           <h2 className="text-xl font-bold mb-6">Building Activity Heat Map</h2>
-          <BuildingHeatMap 
-            key={`heatmap-${resetKey}`}
-            data={filteredData} 
-            selectedBuildingId={selectedBuildingId} 
-            hoveredBuilding={hoveredBuildingName}
-            onHoverBuilding={setHoveredBuildingName}
-          />
+          <div className="px-2 sm:px-0">
+            <BuildingHeatMap 
+              key={`heatmap-${resetKey}`}
+              data={filteredData} 
+              selectedBuildingId={selectedBuildingId} 
+              hoveredBuilding={hoveredBuildingName}
+              onHoverBuilding={setHoveredBuildingName}
+            />
+          </div>
         </div>
       </div>
 

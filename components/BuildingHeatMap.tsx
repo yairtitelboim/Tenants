@@ -142,7 +142,7 @@ const BuildingHeatMap: React.FC<BuildingHeatMapProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 12 }, (_, monthIndex) => {
         const currentDate = new Date(2024, monthIndex, 1);
         const monthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -151,13 +151,13 @@ const BuildingHeatMap: React.FC<BuildingHeatMapProps> = ({
         const monthStr = (monthIndex + 1).toString().padStart(2, '0');
 
         return (
-          <div key={monthName} className="bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold mb-2 text-center text-gray-300">
+          <div key={monthName} className="bg-gray-800 p-2 sm:p-4 rounded-lg">
+            <h3 className="text-xs sm:text-sm font-semibold mb-2 text-center text-gray-300">
               {monthName}
             </h3>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                <div key={i} className="text-xs text-center text-gray-500">
+                <div key={i} className="text-[8px] sm:text-xs text-center text-gray-500">
                   {day}
                 </div>
               ))}
@@ -185,9 +185,9 @@ const BuildingHeatMap: React.FC<BuildingHeatMapProps> = ({
                     onMouseLeave={() => onHoverBuilding(null)}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[10px] text-white/70">{i + 1}</span>
+                      <span className="text-[8px] sm:text-[10px] text-white/70">{i + 1}</span>
                     </div>
-                    <div className="absolute hidden group-hover:block bg-gray-900 text-white p-2 rounded-md text-xs whitespace-nowrap z-10 -translate-y-full left-1/2 -translate-x-1/2">
+                    <div className="absolute hidden group-hover:block bg-gray-900 text-white p-2 rounded-md text-[10px] sm:text-xs whitespace-nowrap z-10 -translate-y-full left-1/2 -translate-x-1/2">
                       {`${monthName} ${i + 1}: ${value.toLocaleString()} visits`}
                     </div>
                   </div>

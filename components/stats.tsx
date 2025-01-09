@@ -2,6 +2,7 @@
 import React from 'react';
 import { Building2, Database, Table, Users, Clock, MapPin, Calendar, Home, Briefcase } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CategoryConfig {
   title: string;
@@ -215,78 +216,98 @@ const Stats: React.FC<StatsProps> = ({ data }) => {
   return (
     <div className="space-y-8 mb-16">
       {/* Basic Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-gray-800/50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-blue-400" />
-              <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full">
-                Buildings
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-white">{stats.uniqueBuildings.toLocaleString()}</p>
-          </div>
-          <p className="text-xs text-gray-400">Unique buildings</p>
-        </div>
-        <div className="bg-gray-800/50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <Database className="w-6 h-6 text-purple-400" />
-              <span className="text-xs font-medium text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">
-                Records
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-white">{stats.totalVisits.toLocaleString()}</p>
-          </div>
-          <p className="text-xs text-gray-400">Total data points</p>
-        </div>
-        <div className="bg-gray-800/50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <Table className="w-6 h-6 text-emerald-400" />
-              <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">
-                Fields
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-white">{stats.totalFields.toLocaleString()}</p>
-          </div>
-          <p className="text-xs text-gray-400">Available data fields</p>
-        </div>
-        <div className="bg-gray-800/50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-yellow-400" />
-              <span className="text-xs font-medium text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded-full">
-                Time Range
-              </span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {stats.dateRange.start} - {stats.dateRange.end}
-            </p>
-          </div>
-          <p className="text-xs text-gray-400">Data coverage period</p>
+      <div className="w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Building Stats Card */}
+          <Card className="bg-gray-800/50 border-0">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full">
+                    Buildings
+                  </span>
+                </div>
+                <p className="text-xl sm:text-2xl font-bold text-white">{stats.uniqueBuildings.toLocaleString()}</p>
+              </div>
+              <p className="text-[10px] sm:text-xs text-gray-400">Unique buildings</p>
+            </CardContent>
+          </Card>
+
+          {/* Records Stats Card */}
+          <Card className="bg-gray-800/50 border-0">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Database className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">
+                    Records
+                  </span>
+                </div>
+                <p className="text-xl sm:text-2xl font-bold text-white">{stats.totalVisits.toLocaleString()}</p>
+              </div>
+              <p className="text-[10px] sm:text-xs text-gray-400">Total data points</p>
+            </CardContent>
+          </Card>
+
+          {/* Fields Stats Card */}
+          <Card className="bg-gray-800/50 border-0">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Table className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">
+                    Fields
+                  </span>
+                </div>
+                <p className="text-xl sm:text-2xl font-bold text-white">{stats.totalFields.toLocaleString()}</p>
+              </div>
+              <p className="text-[10px] sm:text-xs text-gray-400">Available data fields</p>
+            </CardContent>
+          </Card>
+
+          {/* Time Range Stats Card */}
+          <Card className="bg-gray-800/50 border-0">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded-full">
+                    Time Range
+                  </span>
+                </div>
+                <p className="text-lg sm:text-xl font-bold text-white">
+                  {stats.dateRange.start} - {stats.dateRange.end}
+                </p>
+              </div>
+              <p className="text-[10px] sm:text-xs text-gray-400">Data coverage period</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Data Structure */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-300">Data Categories</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {Object.entries(stats.dataStructure).map(([category, info]: [string, any]) => (
             <div key={category} className="bg-gray-800/50 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                  {/* Category Icon */}
-                  {React.createElement(CATEGORY_CONFIG[category as keyof CategoryConfigType].icon, { className: `w-4 h-4 ${CATEGORY_CONFIG[category as keyof CategoryConfigType].iconColor}` })}
-                  <h4 className="text-md font-semibold capitalize">{CATEGORY_CONFIG[category as keyof CategoryConfigType].title}</h4>
+                  {React.createElement(CATEGORY_CONFIG[category as keyof CategoryConfigType].icon, { 
+                    className: `w-4 h-4 sm:w-5 sm:h-5 ${CATEGORY_CONFIG[category as keyof CategoryConfigType].iconColor}` 
+                  })}
+                  <h4 className="text-sm sm:text-md font-semibold capitalize">
+                    {CATEGORY_CONFIG[category as keyof CategoryConfigType].title}
+                  </h4>
                 </div>
-                <span className="text-sm text-gray-400">
+                <span className="text-xs sm:text-sm text-gray-400">
                   {info.present}/{info.total} fields
                 </span>
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-xs sm:text-sm text-gray-400 flex flex-wrap gap-2">
                 {info.columns.map((col: string) => (
-                  <span key={col} className="inline-block bg-gray-700/50 px-2 py-1 rounded mr-2 mb-2">
+                  <span key={col} className="inline-block bg-gray-700/50 px-2 py-1 rounded">
                     {col}
                   </span>
                 ))}

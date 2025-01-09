@@ -67,3 +67,56 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add Mapbox GL CSS */
+.mapboxgl-map {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+}
+
+/* Ensure the map container takes full space */
+.map-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Debug styles */
+.map-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #f0f0f0;
+}
+
+/* Debug styles */
+#map {
+  background-color: yellow;
+}
+
+/* Force the map container to be visible */
+.mapboxgl-map {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure the canvas is visible */
+.mapboxgl-canvas {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  height: 100% !important;
+}

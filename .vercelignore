@@ -1,0 +1,27 @@
+# Ignore large data files
+*.csv
+!public/data/Hines_monthly_2024-12-06.csv
+
+# Ignore development files
+.git
+.github
+node_modules
+.next
+.env*
+.vscode
+*.log
+.DS_Store
+.idea
+coverage
+test
+tests
+__tests__
+*.test.*
+*.spec.*
+README.md
+.gitignore
+.eslintrc*
+.prettier*
+.editorconfig
+jest.config.*
+tsconfig.tsbuildinfo 

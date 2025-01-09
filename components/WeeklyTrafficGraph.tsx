@@ -36,9 +36,12 @@ const WeeklyTrafficGraph: React.FC<WeeklyTrafficGraphProps> = ({
   onHoverBuilding
 }) => {
   return (
-    <div className="h-[400px]">
-      <ResponsiveContainer>
-        <LineChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <div className="w-full h-full relative">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={data[0]?.data}
+          margin={{ top: 10, right: 10, left: 40, bottom: 20 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis 
             dataKey="date"

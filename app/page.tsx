@@ -21,6 +21,11 @@ export default function HomePage() {
     }
   };
 
+  const handleMapClick = () => {
+    console.log('Map button clicked');
+    // You can add more debugging info here
+  };
+
   if (selectedView === 'workorder') {
     return <WorkOrderDashboard onBack={handleBack} />;
   }
@@ -47,7 +52,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
       <h1 className="text-4xl font-bold text-white mb-12">
-        Kode Aggregation Analysis
+         Aggregation Analysis
       </h1>
       
       <div className="space-y-8">
@@ -99,6 +104,17 @@ export default function HomePage() {
             Placer POC
           </button>
           <span className="text-gray-400 text-sm mt-2">Updated: 2024-03-12</span>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <Link 
+            href="/map" 
+            onClick={handleMapClick}
+            className="w-64 px-6 py-3 text-lg font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-center"
+          >
+            Index Map
+          </Link>
+          <span className="text-gray-400 text-sm mt-2">Updated: 2024-03-14</span>
         </div>
       </div>
     </div>

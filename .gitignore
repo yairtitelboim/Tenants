@@ -57,3 +57,12 @@ next-env.d.ts
 /occupancy_analytics/
 *.png
 ~/
+.vercel
+
+# Add to your existing .gitignore
+/data
+*.csv
+*.json
+!package.json
+!tsconfig.json
+!vercel.json
