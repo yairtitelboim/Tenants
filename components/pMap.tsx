@@ -361,6 +361,7 @@ export default function PMap() {
         type: 'geojson',
         data: {
           type: 'Feature',
+          properties: {},
           geometry: {
             type: 'Polygon',
             coordinates: [[]]
