@@ -577,8 +577,14 @@ export default function PMap() {
       );
       
       if (buildingFeatures.length > 0) {
-        // Create a Set of unique building IDs
-        const uniqueBuildingIds = [...new Set(buildingFeatures.map(f => f.id))];
+        // Create array of unique building IDs using Array.from instead of spread
+        const uniqueBuildingIds = Array.from(
+          new Set(
+            buildingFeatures
+              .map(f => f.id)
+              .filter((id): id is string => id !== undefined)
+          )
+        );
         
         // Log the IDs for debugging
         console.log('Building IDs to highlight:', uniqueBuildingIds);
