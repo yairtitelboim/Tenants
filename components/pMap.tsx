@@ -77,7 +77,10 @@ interface BuildingEntry {
   lat: number;
   lng: number;
   id: string;
-  // Add any other properties your building entries have
+  start_date: string;
+  // Add any other fields that exist in your CSV data
+  height?: number;
+  properties?: Record<string, any>;
 }
 
 // Add this helper function to calculate marker color based on foottraffic
@@ -790,8 +793,6 @@ export default function PMap() {
   };
 
   const findBuildingData = (buildingName: string) => {
-    // console.log('Looking for building in CSV:', buildingName);
-    
     const matches = csvData.filter(row => row.name === buildingName);
     
     if (matches.length > 0) {
