@@ -92,6 +92,11 @@ interface BuildingEntry {
   properties?: Record<string, any>;
 }
 
+// Add this interface at the top with your other interfaces
+interface HourlyData {
+  [key: string]: number;
+}
+
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -716,7 +721,7 @@ export default function PMap() {
         ).day;
 
       // Add hourly distribution calculation
-      const hourlyData = {};
+      const hourlyData: HourlyData = {};
       for (let hour = 0; hour < 24; hour++) {
         const startHour = hour.toString().padStart(2, '0');
         const endHour = ((hour + 1) % 24).toString().padStart(2, '0');
