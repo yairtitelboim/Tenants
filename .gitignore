@@ -43,14 +43,14 @@ yarn-error.log*
 # Data files
 /data/
 *.json
-*.csv
 *.xlsx
 *.xls
 *.db
 *.sqlite
 *.sqlite3
 
-# Exceptions
+# Keep this specific CSV file
+!public/data/
 !public/data/Hines_monthly_2024-12-18.csv
 
 # TypeScript
