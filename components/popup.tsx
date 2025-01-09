@@ -116,6 +116,7 @@ const CalendarView: React.FC<{
           <select 
             value={state.selectedMonth}
             onChange={handleMonthChange}
+            aria-label="Select month"
             className="bg-gray-700 text-gray-300 text-sm rounded-md px-2 py-1 border border-gray-600 focus:outline-none focus:border-blue-500"
           >
             {[
@@ -188,7 +189,7 @@ const MonthlyActivity: React.FC<{
         
         // Initialize year if it doesn't exist
         if (!yearMap.has(year)) {
-          yearMap.set(year, Array(12).fill().map((_, i) => ({
+          yearMap.set(year, Array(12).fill(0).map((_, i) => ({
             date: new Date(year, i, 1),
             value: 0,
             intensity: 0
@@ -243,7 +244,7 @@ const MonthlyActivity: React.FC<{
         {yearlyData.map(({ year, months }) => (
           <div key={year} className="grid grid-cols-[30px_repeat(12,minmax(16px,1fr))] gap-1 items-center">
             <div className="text-[10px] text-gray-400 pr-2 text-right">{year}</div>
-            {months.map((month) => (
+            {months.map((month: MonthData) => (
               <div
                 key={month.date.toISOString()}
                 className="aspect-square relative group cursor-pointer"
@@ -409,6 +410,14 @@ const HourlyMovementChart: React.FC<{ buildingData: any }> = ({ buildingData }) 
   );
 };
 
+// Add near the top with other interfaces
+interface MonthData {
+  date: Date;
+  endDate?: Date;
+  value: number;
+  intensity: number;
+}
+
 const Popup: React.FC<PopupProps> = ({ 
   buildingData, 
   locations, 
@@ -424,7 +433,7 @@ const Popup: React.FC<PopupProps> = ({
   const weeklyTrafficData = useMemo(() => {
     const weekData: BuildingDataPoint[] = [];
     const baseDate = new Date();
-    const dayVisits = {
+    const dayVisits: { [key: number]: number } = {
       0: parseFloat(buildingData.visits_by_day_of_week_sunday || '0'),
       1: parseFloat(buildingData.visits_by_day_of_week_monday || '0'),
       2: parseFloat(buildingData.visits_by_day_of_week_tuesday || '0'),
