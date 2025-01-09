@@ -421,7 +421,14 @@ export default function PMap() {
         const features = map.current?.queryRenderedFeatures(e.point, {
           layers: ['3d-buildings', 'texas-tower']
         });
-        if (features && features.length > 0) {
+        
+        if (features && 
+            features.length > 0 && 
+            features[0].properties && 
+            'lon' in features[0].properties && 
+            'lat' in features[0].properties && 
+            'height' in features[0].properties && 
+            features[0].layer) {
           console.log('Building clicked:', {
             lon: features[0].properties.lon,
             lat: features[0].properties.lat,
