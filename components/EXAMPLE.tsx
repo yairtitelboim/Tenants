@@ -200,7 +200,7 @@ export default function PMap() {
           layers: ['3d-buildings', 'texas-tower']
         });
         
-        if (features && features.length > 0 && features[0].properties) {
+        if (features && features.length > 0 && features[0].properties && features[0].layer) {
           console.log('Building clicked:', {
             lon: features[0].properties.lon,
             lat: features[0].properties.lat,
