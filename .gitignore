@@ -50,6 +50,9 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
+# Exceptions
+!public/data/Hines_monthly_2024-12-18.csv
+
 # TypeScript
 next-env.d.ts
 
