@@ -78,8 +78,17 @@ interface BuildingEntry {
   lng: number;
   id: string;
   start_date: string;
-  // Add any other fields that exist in your CSV data
-  height?: number;
+  end_date: string;
+  visits_by_day_of_week_sunday: number;
+  visits_by_day_of_week_monday: number;
+  visits_by_day_of_week_tuesday: number;
+  visits_by_day_of_week_wednesday: number;
+  visits_by_day_of_week_thursday: number;
+  visits_by_day_of_week_friday: number;
+  visits_by_day_of_week_saturday: number;
+  address?: string;
+  state?: string;
+  visit_duration?: string;
   properties?: Record<string, any>;
 }
 
@@ -542,7 +551,7 @@ export default function PMap() {
     
     if (!point) return;
 
-    const boundingBox = [
+    const boundingBox: [mapboxgl.PointLike, mapboxgl.PointLike] = [
       [point.x - BUFFER_SIZE, point.y - BUFFER_SIZE],
       [point.x + BUFFER_SIZE, point.y + BUFFER_SIZE]
     ];
