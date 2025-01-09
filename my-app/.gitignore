@@ -38,3 +38,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# First unignore the directories
+!public/
+!public/data/
+
+# Then unignore the specific file
+!public/data/Hines_monthly_2024-12-18.csv
+
+# Data files
+*.csv
+*.json
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.sqlite3
+!package.json
+!tsconfig.json
+!vercel.json
