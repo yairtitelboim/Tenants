@@ -166,6 +166,16 @@ const getHourlyDistributionFactor = (hour: number) => {
   return 0.02;
 };
 
+// Add this type at the top of your file
+type GeoJSONFeature = {
+  type: 'Feature';
+  properties: Record<string, any>;
+  geometry: {
+    type: 'Polygon';
+    coordinates: number[][][];
+  };
+};
+
 export default function PMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -366,7 +376,7 @@ export default function PMap() {
             type: 'Polygon',
             coordinates: [[]]
           }
-        }
+        } as GeoJSONFeature
       });
 
       // Add the outer circle source and layer
@@ -374,11 +384,12 @@ export default function PMap() {
         type: 'geojson',
         data: {
           type: 'Feature',
+          properties: {},
           geometry: {
             type: 'Polygon',
             coordinates: [[]]
           }
-        }
+        } as GeoJSONFeature
       });
 
       // Inner circle layer
