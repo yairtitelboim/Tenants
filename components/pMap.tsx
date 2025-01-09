@@ -97,6 +97,24 @@ interface HourlyData {
   [key: string]: number;
 }
 
+// Add this interface for building list items
+interface BuildingListItem {
+  name: string;
+  rank: number;
+  foottraffic: number;
+  id: string;
+  lng: number;
+  lat: number;
+}
+
+// Add this interface for admin data
+interface AdminData {
+  totalBuildings: number;
+  selectedBuildings: number;
+  lastUpdate: string;
+  buildingsList: BuildingListItem[];
+}
+
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -201,16 +219,11 @@ export default function PMap() {
   const [locations, setLocations] = useState<any[]>([]);
   const selectedBuildingId = useRef<string | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
-  const [adminData, setAdminData] = useState({
+  const [adminData, setAdminData] = useState<AdminData>({
     totalBuildings: 0,
     selectedBuildings: 0,
-    lastUpdate: '12/18/2024',
-    buildingsList: [] as Array<{
-      name: string;
-      rank: number;
-      foottraffic: number;
-      id: string;
-    }>
+    lastUpdate: new Date().toISOString(),
+    buildingsList: []
   });
   const [highlightedBuilding, setHighlightedBuilding] = useState<string | undefined>();
   const [showAdmin, setShowAdmin] = useState(true);
@@ -277,11 +290,13 @@ export default function PMap() {
         setLocations(parsedData);
 
         // Create buildingsList for admin panel using unique buildings
-        const buildingsList = uniqueLocations.map((building: any, index) => ({
+        const buildingsList = uniqueLocations.map((building: BuildingEntry, index) => ({
           name: building.name,
           rank: index + 1,
           foottraffic: building.foottraffic,
-          id: `building-${building.id}-${index}`
+          id: `building-${building.id}-${index}`,
+          lng: building.lng,
+          lat: building.lat
         }));
 
         // After processing the buildings list:
@@ -298,7 +313,11 @@ export default function PMap() {
           totalBuildings: processedBuildings.length,
           selectedBuildings: 0,
           lastUpdate: new Date().toISOString(),
-          buildingsList: processedBuildings
+          buildingsList: processedBuildings.map(building => ({
+            ...building,
+            lng: building.lng,
+            lat: building.lat
+          }))
         });
       })
       .catch(error => {
