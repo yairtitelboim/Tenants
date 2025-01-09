@@ -600,8 +600,16 @@ export default function PMap() {
       }
 
       // Handle Texas Tower separately
-      if (features.some(f => f.layer.id === 'texas-tower')) {
-        map.current?.setPaintProperty('texas-tower', 'fill-extrusion-color', BUILDING_COLORS.SELECTED);
+      if (features.some(f => 
+        f.layer && 
+        'id' in f.layer && 
+        f.layer.id === 'texas-tower'
+      )) {
+        map.current?.setPaintProperty(
+          'texas-tower', 
+          'fill-extrusion-color', 
+          BUILDING_COLORS.SELECTED
+        );
       }
     }
 
