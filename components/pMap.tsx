@@ -69,6 +69,16 @@ const HIGHLIGHT_RADIUS_OUTER = 800; // Outer circle radius (feet)
 const MIN_GREEN = 100; // Minimum green intensity (darker)
 const MAX_GREEN = 800; // Maximum green intensity (brighter)
 
+// Add this interface at the top of the file with your other types
+interface BuildingEntry {
+  name: string;
+  foottraffic: number;
+  lat: number;
+  lng: number;
+  id: string;
+  // Add any other properties your building entries have
+}
+
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -218,13 +228,14 @@ export default function PMap() {
           .filter(entry => entry !== null);
 
         // Group data by building name
-        const buildingsMap = {};
+        const buildingsMap: Record<string, BuildingEntry> = {};
+        
         parsedData.forEach(entry => {
           if (!buildingsMap[entry.name]) {
             buildingsMap[entry.name] = entry;
           } else {
             // Update if this entry has higher foottraffic
-            if (entry.foottraffic > buildingsMap[entry.name].foottraffic) {
+            if ((entry.foottraffic || 0) > (buildingsMap[entry.name].foottraffic || 0)) {
               buildingsMap[entry.name] = entry;
             }
           }
