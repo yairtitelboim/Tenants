@@ -48,13 +48,8 @@ yarn-error.log*
 *.db
 *.sqlite
 *.sqlite3
-
-# First unignore the directories
-!public/
-!public/data/
-
-# Then unignore the specific file
-!public/data/Hines_monthly_2024-12-18.csv
+*.csv
+/data
 
 # TypeScript
 next-env.d.ts
@@ -65,10 +60,10 @@ next-env.d.ts
 ~/
 .vercel
 
-# Add to your existing .gitignore
-/data
-*.csv
-*.json
+# Exceptions - these must come AFTER the ignore rules
 !package.json
 !tsconfig.json
 !vercel.json
+!public/
+!public/data/
+!public/data/Hines_monthly_2024-12-18.csv
