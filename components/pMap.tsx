@@ -233,11 +233,23 @@ export default function PMap() {
   useEffect(() => {
     // Create timestamp once at the start of data loading
     const timestamp = new Date().toISOString();
+    console.log('[CSV] Starting to fetch data at:', timestamp);
     
     fetch('/data/Hines_monthly_2024-12-18.csv')
-      .then(response => response.text())
+      .then(response => {
+        console.log('[CSV] Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+      })
       .then(text => {
+        console.log('[CSV] Received data length:', text.length);
+        console.log('[CSV] First 100 characters:', text.substring(0, 100));
+        
         const lines = text.split('\n').slice(1);
+        console.log('[CSV] Number of lines:', lines.length);
+
         const parsedData = lines
           .filter(line => line.trim().length > 0)
           .map(line => {
@@ -269,6 +281,9 @@ export default function PMap() {
           })
           .filter(entry => entry !== null);
 
+        console.log('[CSV] Parsed data entries:', parsedData.length);
+        console.log('[CSV] First parsed entry:', parsedData[0]);
+
         // Group data by building name
         const buildingsMap: Record<string, BuildingEntry> = {};
         
@@ -288,6 +303,7 @@ export default function PMap() {
 
         // Set locations with full data for popups
         setLocations(parsedData);
+        console.log('[CSV] Locations set with length:', parsedData.length);
 
         // Create buildingsList for admin panel using unique buildings
         const buildingsList = uniqueLocations.map((building: BuildingEntry, index) => ({
@@ -321,7 +337,11 @@ export default function PMap() {
         });
       })
       .catch(error => {
-        console.error('Error loading building data:', error);
+        console.error('[CSV] Error loading building data:', error);
+        console.error('[CSV] Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
       });
   }, []);
 
@@ -498,10 +518,15 @@ export default function PMap() {
   }, []);
 
   useEffect(() => {
-    if (!map.current || locations.length === 0) return;
+    console.log('[Markers] Locations length:', locations.length);
+    if (!map.current || locations.length === 0) {
+      console.log('[Markers] Skipping marker creation - no map or locations');
+      return;
+    }
 
     // Find maximum foottraffic for normalization
     const maxFoottraffic = Math.max(...locations.map(loc => parseInt(loc.foottraffic) || 0));
+    console.log('[Markers] Max foottraffic:', maxFoottraffic);
 
     // Sort locations by foottraffic (ascending) so busier locations are added last
     const sortedLocations = [...locations].sort((a, b) => {
