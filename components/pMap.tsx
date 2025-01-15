@@ -189,30 +189,19 @@ const cleanupMapResources = (map: mapboxgl.Map | null) => {
 };
 
 // Add this function to process buildings for admin panel
-const processBuildings = (data: BuildingEntry[]): BuildingListItem[] => {
-  // Create a map to store the latest data for each building
-  const latestBuildingData = new Map();
+const processBuildings = (data: ProcessedBuildingEntry[]) => {
+  // Process the buildings as before, but now working with numbers instead of strings
+  const buildingMap = new Map<string, ProcessedBuildingEntry>();
   
-  // Get the latest data for each building
-  data.forEach(building => {
-    const existing = latestBuildingData.get(building.name);
-    if (!existing || new Date(building.start_date) > new Date(existing.start_date)) {
-      latestBuildingData.set(building.name, building);
-    }
+  data.forEach(entry => {
+    // No need to parse numbers since they're already numbers
+    buildingMap.set(entry.id, {
+      ...entry,
+      // Any additional processing you need
+    });
   });
 
-  // Convert map to array and format for admin panel
-  return Array.from(latestBuildingData.values()).map(building => ({
-    name: building.name,
-    rank: 0, // Calculate rank if needed
-    foottraffic: parseInt(building.foottraffic) || 0,
-    id: building.id,
-    lng: building.lng,
-    lat: building.lat,
-    city: building.city || 'Houston',
-    region_code: building.region_code || 'TX',
-    region_name: building.region_name || 'Texas'
-  }));
+  return Array.from(buildingMap.values());
 };
 
 // Add this helper function
@@ -951,13 +940,11 @@ export default function PMap() {
         // Get unique buildings by creating a Set of building names
         const uniqueBuildings = new Set(parsedData.map(building => building.name));
         
-        // Update admin data with correct building count
+        // Update admin data with processed buildings
         const processedBuildings = processBuildings(parsedData);
         setAdminData(prev => ({
           ...prev,
-          totalBuildings: uniqueBuildings.size, // Use unique building count
-          selectedBuildings: 0,
-          lastUpdate: new Date().toISOString(),
+          totalBuildings: uniqueBuildings.size,
           buildingsList: processedBuildings
         }));
       },
