@@ -152,6 +152,14 @@ interface BuildingData {
   // ... other properties
 }
 
+// Add this interface near the top with your other interfaces
+interface PapaParseError {
+  type: string;
+  code: string;
+  message: string;
+  row?: number;
+}
+
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -947,7 +955,7 @@ export default function PMap() {
           buildingsList: processedBuildings
         }));
       },
-      error: (error) => {
+      error: (error: PapaParseError) => {
         console.error('[CSV] Error parsing data:', error);
       }
     });
