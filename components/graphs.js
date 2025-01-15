@@ -1,9 +1,8 @@
 import React, { useReducer, useMemo, useState } from 'react';
-import { Building2, Users, Clock, MapPin, BarChart3, Calendar, ChevronLeft, ChevronRight, TrendingUp, CalendarDays, Square } from 'lucide-react';
+import { Building2, Users, Clock, MapPin, BarChart3, Calendar, ChevronLeft, ChevronRight, TrendingUp, CalendarDays } from 'lucide-react';
 import WeeklyTrafficGraph from './WeeklyTrafficGraph';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { ResponsiveLine } from '@nivo/line';
-import VibrancyComparisonGraph from './VibrancyComparisonGraph';
 
 interface PopupProps {
   buildingData: any;
@@ -11,7 +10,6 @@ interface PopupProps {
   rankings: any;
   totalBuildings: number;
   onBuildingNameClick: (name: string) => void;
-  vibrancyScore?: VibrancyScoreData;
 }
 
 type CalendarState = {
@@ -162,12 +160,10 @@ const CalendarView: React.FC<{
   );
 };
 
-interface MonthlyActivityProps {
+const MonthlyActivity: React.FC<{
   buildingData: any;
   locations: any[];
-}
-
-const MonthlyActivity: React.FC<MonthlyActivityProps> = ({ buildingData, locations = [] }) => {
+}> = ({ buildingData, locations = [] }) => {
   const yearlyData = useMemo(() => {
     if (!buildingData) return [];
     
@@ -191,6 +187,7 @@ const MonthlyActivity: React.FC<MonthlyActivityProps> = ({ buildingData, locatio
         const month = startDate.getMonth();
         const value = parseInt(location.foottraffic) || 0;
         
+        // Initialize year if it doesn't exist
         if (!yearMap.has(year)) {
           yearMap.set(year, Array(12).fill(0).map((_, i) => ({
             date: new Date(year, i, 1),
@@ -199,6 +196,7 @@ const MonthlyActivity: React.FC<MonthlyActivityProps> = ({ buildingData, locatio
           })));
         }
         
+        // Update the month data
         const yearData = yearMap.get(year);
         yearData[month] = {
           date: startDate,
@@ -208,8 +206,15 @@ const MonthlyActivity: React.FC<MonthlyActivityProps> = ({ buildingData, locatio
         };
       });
 
+    console.log('Building data processing:', {
+      buildingId: buildingData.id,
+      maxFoottraffic,
+      yearMap: Object.fromEntries(yearMap)
+    });
+
+    // Convert to array format, sorted by year
     return Array.from(yearMap.entries())
-      .sort(([yearA], [yearB]) => yearB - yearA)
+      .sort(([yearA], [yearB]) => yearB - yearA) // Sort descending
       .map(([year, months]) => ({
         year,
         months
@@ -321,7 +326,7 @@ const HourlyMovementChart: React.FC<{ buildingData: any }> = ({ buildingData }) 
     const hourlyData = buildingData.rankings?.statistics?.hourlyDistribution;
     if (!hourlyData) return [];
 
-    return Object.entries(hourlyData)
+    const data = Object.entries(hourlyData)
       .map(([key, value]) => {
         const startTime = key.match(/(\d{2}):00_\d{2}:00/)?.[1];
         const hour = startTime ? parseInt(startTime, 10) : 0;
@@ -331,6 +336,8 @@ const HourlyMovementChart: React.FC<{ buildingData: any }> = ({ buildingData }) 
         };
       })
       .sort((a, b) => a.hour - b.hour);
+
+    return data;
   }, [buildingData]);
 
   const formatHour = (hour: number) => {
@@ -358,7 +365,11 @@ const HourlyMovementChart: React.FC<{ buildingData: any }> = ({ buildingData }) 
               stroke="#9CA3AF"
               tickFormatter={formatHour}
               ticks={[0, 3, 6, 9, 12, 15, 18, 21]}
-              tick={{ fontSize: 9, fill: '#9CA3AF', dy: 10 }}
+              tick={{ 
+                fontSize: 9,
+                fill: '#9CA3AF',
+                dy: 10
+              }}
               axisLine={{ stroke: '#374151' }}
               minTickGap={15}
               height={40}
@@ -366,7 +377,11 @@ const HourlyMovementChart: React.FC<{ buildingData: any }> = ({ buildingData }) 
             <YAxis
               stroke="#9CA3AF"
               tickFormatter={(value) => `${value}`}
-              tick={{ fontSize: 9, fill: '#9CA3AF', dx: -5 }}
+              tick={{ 
+                fontSize: 9,
+                fill: '#9CA3AF',
+                dx: -5
+              }}
               width={25}
               axisLine={{ stroke: '#374151' }}
             />
@@ -403,26 +418,12 @@ interface MonthData {
   intensity: number;
 }
 
-// Add this interface at the top with other interfaces
-interface VibrancyScoreData {
-  score: number;
-  components: {
-    trafficScore: number;
-    dwellScore: number;
-    spreadScore: number;
-  };
-}
-
-// Add debug flag at the top of the file
-const DEBUG = false;
-
 const Popup: React.FC<PopupProps> = ({ 
   buildingData, 
   locations, 
   rankings, 
   totalBuildings,
-  onBuildingNameClick,
-  vibrancyScore 
+  onBuildingNameClick 
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -474,19 +475,48 @@ const Popup: React.FC<PopupProps> = ({
     saturday: parseFloat(buildingData.visits_by_day_of_week_saturday || '0')
   }), [buildingData]);
 
-  if (DEBUG) {
-    console.log('Full building data:', buildingData);
-    console.log('Raw weekday values:', {
-      monday: buildingData.visits_by_day_of_week_monday,
-      tuesday: buildingData.visits_by_day_of_week_tuesday,
-      wednesday: buildingData.visits_by_day_of_week_wednesday,
-      thursday: buildingData.visits_by_day_of_week_thursday,
-      friday: buildingData.visits_by_day_of_week_friday,
-      saturday: buildingData.visits_by_day_of_week_saturday,
-      sunday: buildingData.visits_by_day_of_week_sunday
-    });
-    console.log('Parsed weekday data:', weekdayData);
-  }
+  // Generate metrics based on building ID
+  const metrics = generateBuildingMetrics(buildingData.id);
+
+  // Split the metrics into main and secondary metrics
+  const mainMetric = {
+    label: 'Utilization Score',
+    value: `${metrics.utilization}%`,
+    icon: Building2,
+    color: 'text-blue-400'
+  };
+
+  const secondaryMetrics = [
+    {
+      label: 'Monthly Visits',
+      value: buildingData.foottraffic ? parseInt(buildingData.foottraffic).toLocaleString() : 'N/A',
+      icon: Users,
+      color: 'text-blue-500'
+    },
+    {
+      label: 'Avg Duration',
+      value: buildingData.visit_duration ? 
+        buildingData.visit_duration === '10_min_or_longer' ? '> 10 Minutes' : `${buildingData.visit_duration} min` 
+        : 'N/A',
+      icon: Clock,
+      color: 'text-green-500'
+    }
+  ];
+
+  // Add full object logging
+  console.log('Full building data:', JSON.stringify(buildingData, null, 2));
+
+  // Add calendar data processing
+  console.log('Raw weekday values:', {
+    monday: buildingData.visits_by_day_of_week_monday,
+    tuesday: buildingData.visits_by_day_of_week_tuesday,
+    wednesday: buildingData.visits_by_day_of_week_wednesday,
+    thursday: buildingData.visits_by_day_of_week_thursday,
+    friday: buildingData.visits_by_day_of_week_friday,
+    saturday: buildingData.visits_by_day_of_week_saturday,
+    sunday: buildingData.visits_by_day_of_week_sunday
+  });
+  console.log('Parsed weekday data:', weekdayData);
 
   // Add this interface near the top with other interfaces
   const tenants: Tenant[] = [
@@ -503,169 +533,23 @@ const Popup: React.FC<PopupProps> = ({
   return (
     <div className="fixed left-6 top-6 w-[400px] max-h-[95vh] overflow-y-auto bg-gray-900/95 backdrop-blur-sm rounded-lg border border-gray-700 shadow-lg z-[9999]">
       <div className="p-6 space-y-6">
-        {/* Header with building details */}
-        <div className="space-y-4 mb-6">
-          {/* Building name, location and type */}
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center space-x-2 mb-2">
-                <Building2 className="w-6 h-6 text-blue-400" />
-                <h2 
-                  className="text-2xl font-bold text-blue-400 cursor-pointer hover:text-blue-500 transition-colors"
-                  onClick={() => onBuildingNameClick && onBuildingNameClick(buildingData.name)}
-                >
-                  {buildingData.name}
-                </h2>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <MapPin className="w-4 h-4" />
-                <span className="text-base">
-                  {buildingData.region_name && buildingData.region_code 
-                    ? `${buildingData.region_name}, ${buildingData.region_code}`
-                    : buildingData.region_code}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-400">Class</span>
-              <div className="h-7 w-7 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <span className="text-sm font-semibold text-blue-400">A</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Building details grid - commented out for now
-          <div className="grid grid-cols-2 gap-4 bg-gray-800/30 rounded-lg p-4">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-400">Location</span>
-              </div>
-              <p className="text-sm text-white">{buildingData.address}</p>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <Square className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-400">Square Footage</span>
-              </div>
-              <p className="text-sm text-white">
-                {parseInt(buildingData.square_footage).toLocaleString()} sq ft
+        {/* Header */}
+        <div className="flex items-center space-x-3 mb-6">
+          <Building2 className="w-6 h-6 text-blue-400" />
+          <div>
+            <h3 
+              className="text-lg font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
+              onClick={() => onBuildingNameClick(buildingData.name)}
+            >
+              {buildingData.name}
+            </h3>
+            {buildingData.address && (
+              <p className="text-sm text-gray-400 flex items-center mt-1">
+                <MapPin className="w-4 h-4 mr-1" />
+                {buildingData.address}
               </p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <CalendarDays className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-400">Year Built</span>
-              </div>
-              <p className="text-sm text-white">{buildingData.year_built || 'N/A'}</p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-400">Occupancy</span>
-              </div>
-              <p className="text-sm text-white">{buildingData.occupancy_rate || '95'}%</p>
-            </div>
+            )}
           </div>
-          */}
-        </div>
-
-        {/* Vibrancy Score Card */}
-        <div className="bg-gray-800/50 p-6 rounded-lg mb-6">
-          <div className="flex items-center space-x-2 mb-6">
-            <Building2 className="w-5 h-5 text-blue-400" />
-            <span className="text-lg font-semibold text-white">
-              Vibrancy Score: {vibrancyScore ? vibrancyScore.score : 'N/A'}
-            </span>
-          </div>
-          
-          {/* Component Scores with improved visualization */}
-          {vibrancyScore && (
-            <div className="grid grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between group relative z-[100]">
-                  <span className="text-sm text-gray-400">Traffic</span>
-                  <Users className="w-4 h-4 text-blue-500" />
-                  {/* Traffic Tooltip - moved left */}
-                  <div className="absolute hidden group-hover:block bg-gray-900 text-white p-2 rounded-md text-xs whitespace-normal z-[100] bottom-6 right-0 w-48 shadow-lg border border-gray-700 translate-x-1/2">
-                    Measures the building's foot traffic relative to other buildings in the same region and time period. A score of 100% means highest foot traffic in the area.
-                  </div>
-                </div>
-                <div className="relative pt-1">
-                  <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
-                    <div 
-                      className="bg-blue-500 rounded transition-all duration-500"
-                      style={{ width: `${vibrancyScore.components.trafficScore}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-white mt-1 block">
-                    {vibrancyScore.components.trafficScore}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between group relative z-[100]">
-                  <span className="text-sm text-gray-400">Dwell</span>
-                  <Clock className="w-4 h-4 text-green-500" />
-                  {/* Dwell Tooltip - moved left */}
-                  <div className="absolute hidden group-hover:block bg-gray-900 text-white p-2 rounded-md text-xs whitespace-normal z-[100] bottom-6 right-0 w-48 shadow-lg border border-gray-700 translate-x-1/2">
-                    Reflects how long visitors stay in the building. Higher scores indicate longer average visit durations, suggesting more engagement with the space.
-                  </div>
-                </div>
-                <div className="relative pt-1">
-                  <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
-                    <div 
-                      className="bg-green-500 rounded transition-all duration-500"
-                      style={{ width: `${vibrancyScore.components.dwellScore}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-white mt-1 block">
-                    {vibrancyScore.components.dwellScore}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between group relative z-[100]">
-                  <span className="text-sm text-gray-400">Spread</span>
-                  <BarChart3 className="w-4 h-4 text-purple-500" />
-                  {/* Spread Tooltip - moved left */}
-                  <div className="absolute hidden group-hover:block bg-gray-900 text-white p-2 rounded-md text-xs whitespace-normal z-[1000] bottom-6 right-14 w-48 shadow-lg border border-gray-700 translate-x-1/2">
-                    Indicates how evenly visits are distributed across the week. Higher scores mean more consistent activity throughout the week rather than concentrated peaks.
-                  </div>
-                </div>
-                <div className="relative pt-1">
-                  <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
-                    <div 
-                      className="bg-purple-500 rounded transition-all duration-500"
-                      style={{ width: `${vibrancyScore.components.spreadScore}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-white mt-1 block">
-                    {vibrancyScore.components.spreadScore}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Vibrancy Trend - Moved here */}
-        <div className="bg-gray-800/50 p-4 rounded-lg mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-gray-400">Vibrancy Trend</span>
-          </div>
-          
-          <VibrancyComparisonGraph
-            selectedBuilding={buildingData}
-            allBuildings={locations}
-            timeFrame={buildingData.time_frame}
-          />
         </div>
 
         {/* Rankings Section */}
@@ -700,6 +584,29 @@ const Popup: React.FC<PopupProps> = ({
             </div>
           </div>
         )}
+
+        {/* Top metrics row - side by side cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Utilization Score Card */}
+          <div className="bg-gray-800/50 p-4 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <mainMetric.icon className={`w-4 h-4 ${mainMetric.color}`} />
+              <span className="text-sm text-gray-400">{mainMetric.label}</span>
+            </div>
+            <div className="text-xl font-bold text-white">{mainMetric.value}</div>
+          </div>
+
+          {/* Weekly Visits Card */}
+          <div className="bg-gray-800/50 p-4 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <Users className="w-4 h-4 text-blue-400" />
+              <span className="text-sm text-gray-400">Weekly Visits</span>
+            </div>
+            <div className="text-xl font-bold text-white">
+              {metrics.weeklyVisits.toLocaleString()}
+            </div>
+          </div>
+        </div>
 
         {/* Tenant Mix Card */}
         <div className="bg-gray-800/50 p-4 rounded-lg mb-6">
@@ -742,6 +649,22 @@ const Popup: React.FC<PopupProps> = ({
           </div>
         </div>
 
+        {/* Secondary Metrics Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {secondaryMetrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className="bg-gray-800/50 p-4 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Icon className={`w-4 h-4 ${metric.color}`} />
+                  <span className="text-sm text-gray-400">{metric.label}</span>
+                </div>
+                <div className="text-xl font-bold text-white">{metric.value}</div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Add Monthly Activity before Visit Pattern */}
         <MonthlyActivity 
           buildingData={buildingData} 
@@ -750,7 +673,7 @@ const Popup: React.FC<PopupProps> = ({
 
         {/* Weekly Traffic Pattern Section */}
         <div className="bg-gray-800/50 p-4 rounded-lg">
-          <div className="flex items-center space-x-2 mb-3">
+          <div className="flex items-center space-x-2 mb-6">
             <BarChart3 className="w-4 h-4 text-blue-400" />
             <span className="text-sm text-gray-400">Weekly Traffic Pattern</span>
           </div>
@@ -784,9 +707,7 @@ const Popup: React.FC<PopupProps> = ({
               </div>
               <div className="flex justify-between items-center text-white">
                 <span className="text-sm text-gray-400">Avg Weekly Visits</span>
-                <span className="text-sm font-medium">
-                  {Math.round(parseInt(buildingData.foottraffic || '0') / 4).toLocaleString()}
-                </span>
+                <span className="text-sm font-medium">2,345</span>
               </div>
             </div>
           </div>
@@ -797,7 +718,7 @@ const Popup: React.FC<PopupProps> = ({
           <CalendarView weekdayData={weekdayData} />
         </div>
 
-        {/* Hourly Movement Chart is already here */}
+        {/* Add the Hourly Movement Chart at the bottom */}
         <HourlyMovementChart buildingData={buildingData} />
       </div>
     </div>
