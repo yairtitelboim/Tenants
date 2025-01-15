@@ -552,7 +552,11 @@ export default function PMap() {
         filter: ['==', 'id', id]
       })[0];
       
-      if (!feature?.geometry?.coordinates?.[0]?.[0]) return { id, name: 'Unknown' };
+      if (!feature?.geometry || 
+          feature.geometry.type !== 'MultiPolygon' || 
+          !feature.geometry.coordinates?.[0]?.[0]) {
+        return { id, name: 'Unknown' };
+      }
       
       const [lng, lat] = feature.geometry.coordinates[0][0];
       const building = findBuildingByCoordinates(lat, lng, locations);
@@ -759,7 +763,11 @@ export default function PMap() {
         filter: ['==', 'id', id]
       })[0];
       
-      if (!feature?.geometry?.coordinates?.[0]?.[0]) return { id, name: 'Unknown' };
+      if (!feature?.geometry || 
+          feature.geometry.type !== 'MultiPolygon' || 
+          !feature.geometry.coordinates?.[0]?.[0]) {
+        return { id, name: 'Unknown' };
+      }
       
       const [lng, lat] = feature.geometry.coordinates[0][0];
       const building = findBuildingByCoordinates(lat, lng, locations);
