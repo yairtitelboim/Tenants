@@ -484,28 +484,24 @@ export default function PMap() {
     }
 
     // Find maximum foottraffic for normalization
-    const maxFoottraffic = Math.max(...locations.map(loc => parseInt(loc.foottraffic) || 0));
+    const maxFoottraffic = Math.max(...locations.map(loc => loc.foottraffic));
     console.log('[Markers] Max foottraffic:', maxFoottraffic);
 
     // Sort locations by foottraffic (ascending) so busier locations are added last
-    const sortedLocations = [...locations].sort((a, b) => {
-      const aTraffic = parseInt(a.foottraffic) || 0;
-      const bTraffic = parseInt(b.foottraffic) || 0;
-      return aTraffic - bTraffic;
-    });
+    const sortedLocations = [...locations].sort((a, b) => a.foottraffic - b.foottraffic);
 
     // Create new markers
     sortedLocations.forEach(location => {
       if (location.lat && location.lng && !isNaN(location.lat) && !isNaN(location.lng)) {
         const marker = new mapboxgl.Marker({
-          color: getMarkerColor(parseInt(location.foottraffic) || 0, maxFoottraffic)
+          color: getMarkerColor(location.foottraffic, maxFoottraffic)
         })
           .setLngLat([location.lng, location.lat])
           .addTo(map.current!);
 
         // Set z-index based on foottraffic
         const el = marker.getElement();
-        const zIndex = Math.floor((parseInt(location.foottraffic) || 0) / maxFoottraffic * 900);
+        const zIndex = Math.floor(location.foottraffic / maxFoottraffic * 900);
         el.style.zIndex = String(zIndex + 100); // Base z-index of 100
 
         // Add click handler
