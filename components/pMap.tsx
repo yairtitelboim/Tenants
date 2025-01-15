@@ -126,6 +126,15 @@ interface VibrancyScoreData {
   };
 }
 
+// Add this interface for building data if not already defined
+interface BuildingData {
+  id: string;
+  name: string;
+  // Add other properties your building data has
+  coordinates?: number[];
+  // ... other properties
+}
+
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -878,7 +887,7 @@ export default function PMap() {
     };
   }, []);
 
-  const handleBuildingClick = useCallback((buildingData) => {
+  const handleBuildingClick = useCallback((buildingData: BuildingData) => {
     setSelectedBuilding({
       ...buildingData,
       vibrancyScore: buildingVibrancyScores.get(buildingData.id)
