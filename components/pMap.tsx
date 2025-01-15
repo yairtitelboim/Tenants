@@ -74,9 +74,9 @@ const MAX_GREEN = 800; // Maximum green intensity (brighter)
 // Add this interface at the top of the file with your other types
 interface BuildingEntry {
   name: string;
-  foottraffic: number;
-  lat: number;
-  lng: number;
+  foottraffic: string;
+  lat: string;
+  lng: string;
   id: string;
   start_date: string;
   end_date: string;
@@ -916,9 +916,9 @@ export default function PMap() {
           )
           .map(entry => ({
             ...entry,
-            lat: parseFloat(entry.lat),
-            lng: parseFloat(entry.lng),
-            foottraffic: parseInt(entry.foottraffic) || 0
+            lat: parseFloat(entry.lat || '0'),
+            lng: parseFloat(entry.lng || '0'),
+            foottraffic: parseInt(entry.foottraffic || '0') || 0
           }));
 
         console.log('[CSV] Processed entries:', parsedData.length);
