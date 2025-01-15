@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Popup from './popup';
 import Admin from './admin';
-import Papa from 'papaparse';
+import Papa, { ParseResult } from 'papaparse';
 import { calculateVibrancyScore } from './vibrancy';
 
 // Set the access token
@@ -917,11 +917,11 @@ export default function PMap() {
   };
 
   const processData = (text: string) => {
-    Papa.parse(text, {
+    Papa.parse<BuildingEntry>(text, {
       header: true,
-      complete: (results) => {
+      complete: (results: ParseResult<BuildingEntry>) => {
         const parsedData = results.data
-          .filter((entry: any): entry is BuildingEntry => entry !== null)
+          .filter((entry): entry is BuildingEntry => entry !== null)
           .map(entry => ({
             ...entry,
             lat: parseFloat(entry.lat || '0'),
@@ -936,22 +936,17 @@ export default function PMap() {
             visits_by_day_of_week_saturday: parseFloat(entry.visits_by_day_of_week_saturday || '0')
           })) as ProcessedBuildingEntry[];
 
-        console.log('[CSV] Processed entries:', parsedData.length);
+        // Store the raw CSV data
+        setCsvData(results.data.filter((entry): entry is BuildingEntry => entry !== null));
         
-        // Store the full CSV data
-        setCsvData(results.data.filter((entry: any): entry is BuildingEntry => entry !== null));
-        
-        // Update locations state which will trigger marker creation
+        // Store the processed data
         setLocations(parsedData);
-        
-        // Get unique buildings by creating a Set of building names
-        const uniqueBuildings = new Set(parsedData.map(building => building.name));
-        
-        // Update admin data with processed buildings
+
+        // Update admin data
         const processedBuildings = processBuildings(parsedData);
         setAdminData(prev => ({
           ...prev,
-          totalBuildings: uniqueBuildings.size,
+          totalBuildings: new Set(parsedData.map(b => b.id)).size,
           buildingsList: processedBuildings
         }));
       },
