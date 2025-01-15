@@ -80,6 +80,28 @@ interface BuildingEntry {
   id: string;
   start_date: string;
   end_date: string;
+  visits_by_day_of_week_sunday: string;
+  visits_by_day_of_week_monday: string;
+  visits_by_day_of_week_tuesday: string;
+  visits_by_day_of_week_wednesday: string;
+  visits_by_day_of_week_thursday: string;
+  visits_by_day_of_week_friday: string;
+  visits_by_day_of_week_saturday: string;
+  address?: string;
+  state?: string;
+  visit_duration?: string;
+  properties?: Record<string, any>;
+}
+
+// New interface for processed data
+interface ProcessedBuildingEntry {
+  name: string;
+  foottraffic: number;
+  lat: number;
+  lng: number;
+  id: string;
+  start_date: string;
+  end_date: string;
   visits_by_day_of_week_sunday: number;
   visits_by_day_of_week_monday: number;
   visits_by_day_of_week_tuesday: number;
@@ -248,7 +270,7 @@ export default function PMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
-  const [locations, setLocations] = useState<any[]>([]);
+  const [locations, setLocations] = useState<ProcessedBuildingEntry[]>([]);
   const selectedBuildingId = useRef<string | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const [adminData, setAdminData] = useState<AdminData>({
@@ -907,24 +929,25 @@ export default function PMap() {
       header: true,
       complete: (results) => {
         const parsedData = results.data
-          .filter((entry: any): entry is BuildingEntry => 
-            entry.name && 
-            entry.lat && 
-            entry.lng && 
-            !isNaN(parseFloat(entry.lat)) && 
-            !isNaN(parseFloat(entry.lng))
-          )
+          .filter((entry: any): entry is BuildingEntry => entry !== null)
           .map(entry => ({
             ...entry,
             lat: parseFloat(entry.lat || '0'),
             lng: parseFloat(entry.lng || '0'),
-            foottraffic: parseInt(entry.foottraffic || '0') || 0
-          }));
+            foottraffic: parseInt(entry.foottraffic || '0') || 0,
+            visits_by_day_of_week_sunday: parseFloat(entry.visits_by_day_of_week_sunday || '0'),
+            visits_by_day_of_week_monday: parseFloat(entry.visits_by_day_of_week_monday || '0'),
+            visits_by_day_of_week_tuesday: parseFloat(entry.visits_by_day_of_week_tuesday || '0'),
+            visits_by_day_of_week_wednesday: parseFloat(entry.visits_by_day_of_week_wednesday || '0'),
+            visits_by_day_of_week_thursday: parseFloat(entry.visits_by_day_of_week_thursday || '0'),
+            visits_by_day_of_week_friday: parseFloat(entry.visits_by_day_of_week_friday || '0'),
+            visits_by_day_of_week_saturday: parseFloat(entry.visits_by_day_of_week_saturday || '0')
+          })) as ProcessedBuildingEntry[];
 
         console.log('[CSV] Processed entries:', parsedData.length);
         
         // Store the full CSV data
-        setCsvData(parsedData);
+        setCsvData(results.data.filter((entry: any): entry is BuildingEntry => entry !== null));
         
         // Update locations state which will trigger marker creation
         setLocations(parsedData);
