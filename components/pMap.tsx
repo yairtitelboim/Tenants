@@ -559,7 +559,11 @@ export default function PMap() {
       }
       
       const [lng, lat] = feature.geometry.coordinates[0][0];
-      const building = findBuildingByCoordinates(lat, lng, locations);
+      const building = findBuildingByCoordinates(
+        Number(lat), 
+        Number(lng), 
+        locations
+      );
       
       return {
         id,
@@ -770,7 +774,11 @@ export default function PMap() {
       }
       
       const [lng, lat] = feature.geometry.coordinates[0][0];
-      const building = findBuildingByCoordinates(lat, lng, locations);
+      const building = findBuildingByCoordinates(
+        Number(lat), 
+        Number(lng), 
+        locations
+      );
       
       return {
         id,
