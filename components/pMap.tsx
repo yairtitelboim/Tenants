@@ -121,13 +121,8 @@ interface HourlyData {
 }
 
 // Add this interface for building list items
-interface BuildingListItem {
-  name: string;
+interface BuildingListItem extends ProcessedBuildingEntry {
   rank: number;
-  foottraffic: number;
-  id: string;
-  lng: number;
-  lat: number;
 }
 
 // Add this interface for admin data
@@ -189,19 +184,23 @@ const cleanupMapResources = (map: mapboxgl.Map | null) => {
 };
 
 // Add this function to process buildings for admin panel
-const processBuildings = (data: ProcessedBuildingEntry[]) => {
-  // Process the buildings as before, but now working with numbers instead of strings
+const processBuildings = (data: ProcessedBuildingEntry[]): BuildingListItem[] => {
   const buildingMap = new Map<string, ProcessedBuildingEntry>();
   
+  // First pass: collect unique buildings
   data.forEach(entry => {
-    // No need to parse numbers since they're already numbers
-    buildingMap.set(entry.id, {
-      ...entry,
-      // Any additional processing you need
-    });
+    buildingMap.set(entry.id, entry);
   });
 
-  return Array.from(buildingMap.values());
+  // Convert to array and sort by foottraffic
+  const sortedBuildings = Array.from(buildingMap.values())
+    .sort((a, b) => b.foottraffic - a.foottraffic);
+
+  // Add rank to each building
+  return sortedBuildings.map((building, index) => ({
+    ...building,
+    rank: index + 1
+  }));
 };
 
 // Add this helper function
