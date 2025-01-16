@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Popup from './popup';
 import Admin from './admin';
-import Papa, { ParseResult } from 'papaparse';
+import Papa, { ParseResult, ParseError } from 'papaparse';
 import { calculateVibrancyScore } from './vibrancy';
 
 // Set the access token
@@ -152,14 +152,6 @@ interface BuildingData {
   // ... other properties
 }
 
-// Add this interface near the top with your other interfaces
-interface PapaParseError {
-  type: string;
-  code: string;
-  message: string;
-  row?: number;
-}
-
 // Add this helper function to calculate marker color based on foottraffic
 const getMarkerColor = (foottraffic: number, maxFoottraffic: number): string => {
   // Normalize foottraffic to a value between 0 and 1
@@ -195,19 +187,29 @@ const cleanupMapResources = (map: mapboxgl.Map | null) => {
 const processBuildings = (data: ProcessedBuildingEntry[]): BuildingListItem[] => {
   const buildingMap = new Map<string, ProcessedBuildingEntry>();
   
-  // First pass: collect unique buildings
   data.forEach(entry => {
     buildingMap.set(entry.id, entry);
   });
 
-  // Convert to array and sort by foottraffic
   const sortedBuildings = Array.from(buildingMap.values())
     .sort((a, b) => b.foottraffic - a.foottraffic);
 
-  // Add rank to each building
   return sortedBuildings.map((building, index) => ({
-    ...building,
-    rank: index + 1
+    id: building.id,
+    name: building.name,
+    rank: index + 1,
+    lat: building.lat,
+    lng: building.lng,
+    foottraffic: building.foottraffic,
+    start_date: building.start_date,
+    end_date: building.end_date,
+    visits_by_day_of_week_sunday: building.visits_by_day_of_week_sunday,
+    visits_by_day_of_week_monday: building.visits_by_day_of_week_monday,
+    visits_by_day_of_week_tuesday: building.visits_by_day_of_week_tuesday,
+    visits_by_day_of_week_wednesday: building.visits_by_day_of_week_wednesday,
+    visits_by_day_of_week_thursday: building.visits_by_day_of_week_thursday,
+    visits_by_day_of_week_friday: building.visits_by_day_of_week_friday,
+    visits_by_day_of_week_saturday: building.visits_by_day_of_week_saturday
   }));
 };
 
@@ -813,83 +815,8 @@ export default function PMap() {
   };
 
   // Add this function inside the PMap component
-  const handleAdminBuildingClick = async (building: any) => {
-    if (DEBUG) console.log('=== Admin Building Click Debug ===');
-    if (DEBUG) console.log('Building data:', building);
-    
-    if (map.current) {
-      // First, fly to the building location
-      map.current.flyTo({
-        center: [building.lng, building.lat],
-        zoom: 16,
-        pitch: 45,
-        bearing: -17.6,
-        duration: 1000
-      });
-
-      // Wait for the movement to finish
-      await new Promise(resolve => {
-        map.current?.once('moveend', resolve);
-      });
-
-      // Wait a bit more for the buildings to render
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Now query the features with a smaller buffer
-      const point = map.current.project([building.lng, building.lat]);
-      const BUFFER_SIZE = 0.5; // Reduced from 20 to 10
-      
-      const boundingBox: [mapboxgl.PointLike, mapboxgl.PointLike] = [
-        [point.x - BUFFER_SIZE, point.y - BUFFER_SIZE],
-        [point.x + BUFFER_SIZE, point.y + BUFFER_SIZE]
-      ];
-
-      const features = map.current.queryRenderedFeatures(boundingBox, {
-        layers: ['3d-buildings', 'texas-tower']
-      });
-
-      console.log('Features found:', features);
-
-      // Reset colors
-      map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', BUILDING_COLORS.DEFAULT);
-      map.current.setPaintProperty('texas-tower', 'fill-extrusion-color', BUILDING_COLORS.DEFAULT);
-
-      if (features && features.length > 0) {
-        // Find the closest feature to the clicked point
-        const closestFeature = features.reduce((closest, current) => {
-          if (!closest) return current;
-          
-          const currentCenter = map.current!.project(
-            [(current.geometry as any).coordinates[0][0][0],
-             (current.geometry as any).coordinates[0][0][1]]
-          );
-          const closestCenter = map.current!.project(
-            [(closest.geometry as any).coordinates[0][0][0],
-             (closest.geometry as any).coordinates[0][0][1]]
-          );
-          
-          const currentDist = Math.hypot(currentCenter.x - point.x, currentCenter.y - point.y);
-          const closestDist = Math.hypot(closestCenter.x - point.x, closestCenter.y - point.y);
-          
-          return currentDist < closestDist ? current : closest;
-        });
-
-        if (closestFeature) {
-          // Highlight only the closest building
-          map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
-            'match',
-            ['id'],
-            closestFeature.id,
-            BUILDING_COLORS.SELECTED,
-            BUILDING_COLORS.DEFAULT
-          ]);
-        }
-      }
-    }
-
-    // Then handle the building selection as before
-    handleMarkerClick(building);
-    setShowAdmin(false);
+  const handleAdminBuildingClick = async (building: any): Promise<void> => {
+    await handleMarkerClick(building);
   };
 
   // Update the cleanup effect
@@ -919,7 +846,7 @@ export default function PMap() {
   const processData = (text: string) => {
     Papa.parse<BuildingEntry>(text, {
       header: true,
-      complete: (results: ParseResult<BuildingEntry>) => {
+      complete: (results) => {
         const parsedData = results.data
           .filter((entry): entry is BuildingEntry => entry !== null)
           .map(entry => ({
@@ -936,13 +863,9 @@ export default function PMap() {
             visits_by_day_of_week_saturday: parseFloat(entry.visits_by_day_of_week_saturday || '0')
           })) as ProcessedBuildingEntry[];
 
-        // Store the raw CSV data
         setCsvData(results.data.filter((entry): entry is BuildingEntry => entry !== null));
-        
-        // Store the processed data
         setLocations(parsedData);
 
-        // Update admin data
         const processedBuildings = processBuildings(parsedData);
         setAdminData(prev => ({
           ...prev,
@@ -950,7 +873,7 @@ export default function PMap() {
           buildingsList: processedBuildings
         }));
       },
-      error: (error: PapaParseError) => {
+      error: (error: Error, file: File) => {
         console.error('[CSV] Error parsing data:', error);
       }
     });
@@ -1062,7 +985,7 @@ export default function PMap() {
           rankings={selectedBuilding.rankings}
           totalBuildings={adminData.totalBuildings}
           onBuildingNameClick={handleBuildingNameClick}
-          vibrancyScore={buildingVibrancyScores.get(selectedBuilding.id)}
+          vibrancyScore={buildingVibrancyScores.get(selectedBuilding?.id)}
           className="z-20"
         />
       )}

@@ -1,19 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Building2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { BuildingListItem } from '../types/buildings';
 
-interface AdminProps {
+interface AdminProps extends React.HTMLAttributes<HTMLDivElement> {
   totalBuildings: number;
   selectedBuildings: number;
   lastUpdate: string;
-  buildingsList: Array<{
-    name: string;
-    rank: number;
-    foottraffic: number;
-    id: string;
-    lng: number;
-    lat: number;
-  }>;
-  onBuildingClick: (building: any) => void;
+  buildingsList: BuildingListItem[];
+  onBuildingClick: (building: any) => Promise<void>;
   highlightedBuilding?: string;
 }
 

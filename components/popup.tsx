@@ -4,14 +4,15 @@ import WeeklyTrafficGraph from './WeeklyTrafficGraph';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { ResponsiveLine } from '@nivo/line';
 import VibrancyComparisonGraph from './VibrancyComparisonGraph';
+import { ProcessedBuildingEntry } from '../types/buildings';
 
-interface PopupProps {
+interface PopupProps extends React.HTMLAttributes<HTMLDivElement> {
   buildingData: any;
-  locations: any[];
+  locations: ProcessedBuildingEntry[];
   rankings: any;
   totalBuildings: number;
   onBuildingNameClick: (name: string) => void;
-  vibrancyScore?: VibrancyScoreData;
+  vibrancyScore: any;
 }
 
 type CalendarState = {
