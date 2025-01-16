@@ -282,24 +282,46 @@ export default function PMap() {
   const [buildingRankings, setBuildingRankings] = useState<Map<string, number>>(new Map());
   const [csvData, setCsvData] = useState<BuildingEntry[]>([]);
   const [buildingVibrancyScores, setBuildingVibrancyScores] = useState<Map<string, any>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (DEBUG) {
-      console.log('[CSV] Current directory:', process.cwd());
-      console.log('[CSV] Attempting to fetch from:', window.location.origin + '/data/Hines_monthly_2024-12-18.csv');
-    }
+    let isMounted = true;
     
-    fetch('/data/Hines_monthly_2024-12-18.csv')
-      .then(response => response.text())
-      .then(text => {
-        if (DEBUG) {
-          console.log('[CSV] Received data:', text.substring(0, 100));
+    const fetchData = async () => {
+      if (!isMounted) return;
+      setIsLoading(true);
+      try {
+        console.log('Attempting to fetch CSV from:', '/data/Hines_monthly_2024-12-18.csv');
+        const response = await fetch('/data/Hines_monthly_2024-12-18.csv');
+        
+        if (!isMounted) return;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const text = await response.text();
+        if (!isMounted) return;
+        
+        console.log('CSV data received, first 100 chars:', text.substring(0, 100));
+        if (!text.trim()) {
+          throw new Error('Received empty CSV data');
+        }
+        
         processData(text);
-      })
-      .catch(error => {
-        console.error('[CSV] Error:', error);
-      });
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Error fetching or processing CSV:', error);
+      } finally {
+        if (!isMounted) return;
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -963,6 +985,14 @@ export default function PMap() {
   return (
     <div className="fixed inset-0 w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full z-0" />
+      
+      {isLoading && (
+        <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <p className="text-white">Loading map data...</p>
+          </div>
+        </div>
+      )}
       
       {/* Admin Panel */}
       {showAdmin && (
