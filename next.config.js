@@ -11,14 +11,12 @@ const nextConfig = {
   webpack: (config) => {
     config.module.rules.push({
       test: /\.csv$/,
-      loader: 'csv-loader',
+      loader: 'file-loader',
       options: {
-        dynamicTyping: true,
-        header: true,
-        skipEmptyLines: true
-      }
-    })
-    return config
+        name: '[path][name].[ext]',
+      },
+    });
+    return config;
   }
 }
 

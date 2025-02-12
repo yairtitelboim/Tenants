@@ -31,4 +31,4 @@ export interface BuildingListItem {
   visits_by_day_of_week_thursday: number;
   visits_by_day_of_week_friday: number;
   visits_by_day_of_week_saturday: number;
-} 
+}

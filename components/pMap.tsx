@@ -292,7 +292,7 @@ export default function PMap() {
       setIsLoading(true);
       try {
         console.log('Attempting to fetch CSV from:', '/data/Hines_monthly_2024-12-18.csv');
-        const response = await fetch('/data/Hines_monthly_2024-12-18.csv');
+        const response = await fetch('/data/retail.csv');
         
         if (!isMounted) return;
         if (!response.ok) {
